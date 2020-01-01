@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import * as serviceWorker from "./serviceWorker";
-import "./index.css"
+import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import { Route, Switch } from "react-router-dom";
 import App from "./components/App";
