@@ -54,18 +54,17 @@ export default class Snake {
     this.positions.push([row, col]);
   }
 
-  // TODO: Make this better
   generateColor(): string {
     // "random" number generator based on a seed
     // https://stackoverflow.com/a/19303725
     const random = (seed: number) => {
-      var x = Math.sin(seed + 2) * 10000;
+      var x = Math.sin(seed) * 10000;
       return x - Math.floor(x);
     };
 
     // generates a "random" color for this object (e.g., #56eec7)
     // https://dev.to/akhil_001/generating-random-color-with-single-line-of-js-code-fhj
-    const randomColor = "#" + Math.floor(random(this.id) * 16777215).toString(16);
+    const randomColor = "#" + Math.floor(random(this.id + 1) * 16777215).toString(16);
     return randomColor;
   }
 }

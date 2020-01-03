@@ -1,6 +1,6 @@
 import Node from "./Node";
 import Snake from "./Snake";
-import { Position } from "./types";
+import { Position, Direction } from "./types";
 
 type GameState = "running" | "ended";
 
@@ -8,7 +8,7 @@ export interface GameProps {
   rows: number;
   columns: number;
   snakes: number;
-  initialLength: number;
+  snakeLength: number;
 }
 
 export default class Game {
@@ -28,17 +28,8 @@ export default class Game {
       });
     });
 
-    // TODO: Initial snake positioning
     this.snakes = Array.from({ length: this.props.snakes }, (_, i) => {
-      return new Snake(
-        i,
-        [
-          [i * 2, i * 10 + 0],
-          [i * 2, i * 10 + 1],
-          [i * 2, i * 10 + 2]
-        ],
-        "right"
-      );
+      return this.createSnake(i, i);
     });
 
     this.iteration = 0;
@@ -56,6 +47,56 @@ export default class Game {
 
     this.iteration++;
     this.updateBoard();
+  }
+
+  // Place snakes along the perimeter of a rectangle with
+  // width and height equal to the canvas' minus $margin on each side.
+  private createSnake(index: number, id: number, margin = 2) {
+    const [width, height] = [this.props.columns - 2 * margin, this.props.rows - 2 * margin];
+    const perimeter = width * 2 + height * 2 - 4;
+    const vertices = [0, width - 1, width + height - 2, width + height + width - 3, perimeter];
+    function distanceToPosition(distance: number): [Position, Direction] {
+      distance = distance % perimeter;
+      const side = vertices.findIndex((vertex, i) => {
+        const nextVertex = vertices[i + 1];
+        return nextVertex && vertex <= distance && distance < nextVertex;
+      });
+      // Position relative to the inner rectangle (ignore margins)
+      let position: Position, direction: Direction;
+      switch (side) {
+        case 0:
+          position = [0, distance];
+          direction = "right";
+          break;
+        case 1:
+          position = [distance - width + 1, width - 1];
+          direction = "down";
+          break;
+        case 2:
+          position = [height - 1, perimeter - height - distance + 1];
+          direction = "left";
+          break;
+        case 3:
+          position = [perimeter - distance, 0];
+          direction = "up";
+          break;
+        default:
+          throw new Error("Invalid distance.");
+      }
+      return [[position[0] + margin, position[1] + margin], direction];
+    }
+
+    const startDistance = Math.floor((index * perimeter) / this.props.snakes);
+    let direction: Direction = "right";
+    let positions = [];
+    for (let i = 0; i < this.props.snakeLength; i++) {
+      const squareDistance = startDistance + i;
+      const [squarePosition, squareDirection] = distanceToPosition(squareDistance);
+      positions.push(squarePosition);
+      direction = squareDirection;
+    }
+
+    return new Snake(id, positions, direction);
   }
 
   private moveSnake(snake: Snake) {

@@ -19,7 +19,7 @@ export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
 
   static defaultProps = {
     speed: 2,
-    initialLength: 4
+    snakeLength: 4
   };
 
   constructor(props: GameCanvasProps) {
@@ -91,6 +91,7 @@ export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
     this.intervalID = window.setInterval(() => {
       this.game.next();
       this.display();
+      if (this.game.state === "ended") window.clearInterval(this.intervalID);
     }, (1 / this.props.speed) * 1000);
   }
 
@@ -100,7 +101,7 @@ export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
   }
 
   componentWillUnmount() {
-    clearInterval(this.intervalID);
+    window.clearInterval(this.intervalID);
   }
 
   render() {
