@@ -46,9 +46,29 @@ export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
     ctx.restore();
   }
 
+  // TODO: Draw each position on the board instead of each snake
+  // That way, it will be easier to handle drawing multiple objects on the same position
   displayGame() {
     this.displayGrid();
     this.game.snakes.filter(snake => snake.alive).forEach(this.displaySnake.bind(this));
+    this.game.snakes.filter(snake => snake.alive).forEach(this.displayFruit.bind(this));
+  }
+
+  displayFruit(snake: Snake) {
+    if(!snake.fruit) return; // No fruit to display; skip.
+    const [row, col] = snake.fruit;
+    let ctx = this.ctx!;
+    ctx.save();
+
+    ctx.fillStyle = snake.color;
+    ctx.fillRect(
+      col * this.unit_width,
+      row * this.unit_height,
+      this.unit_width,
+      this.unit_height
+    );
+
+    ctx.restore();
   }
 
   displaySnake(snake: Snake) {
@@ -56,7 +76,6 @@ export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
     ctx.save();
     snake.positions.forEach(([row, col]) => {
       ctx.fillStyle = snake.color;
-      ctx.strokeStyle = snake.color;
       ctx.fillRect(
         col * this.unit_width,
         row * this.unit_height,

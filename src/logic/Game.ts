@@ -1,6 +1,6 @@
-import Node from "./Node";
+import Board from "./Board";
 import Snake from "./Snake";
-import { Position, Direction } from "./types";
+import { Direction, Position } from "./types";
 
 type GameState = "running" | "ended";
 
@@ -13,7 +13,7 @@ export interface GameProps {
 
 export default class Game {
   props: GameProps;
-  board: Node[][];
+  board: Board;
   snakes: Snake[];
   state: GameState;
   iteration: number;
@@ -22,21 +22,20 @@ export default class Game {
     this.props = props;
 
     // TODO: Walls
-    this.board = Array.from({ length: this.props.rows }, () => {
-      return Array.from({ length: this.props.columns }, () => {
-        return new Node();
-      });
-    });
-
+    this.board = new Board(this.props.rows, this.props.columns);
     this.snakes = Array.from({ length: this.props.snakes }, (_, i) => {
       return this.createSnake(i, i);
     });
+    // Add snakes to the board
+    this.snakes.forEach(snake => this.board.addSnake(snake));
+    // Generate fruits for each snake
+    this.snakes.forEach(snake => (snake.fruit = this.board.addFruit(snake)));
 
     this.iteration = 0;
-    this.updateBoard();
     this.state = "running";
   }
 
+  // Game iteration: advance each snake one unit
   next() {
     if (this.state === "ended") return;
 
@@ -46,22 +45,21 @@ export default class Game {
     }
 
     this.iteration++;
-    this.updateBoard();
   }
 
-  // Place snakes along the perimeter of a rectangle with
-  // width and height equal to the canvas' minus $margin on each side.
-  private createSnake(index: number, id: number, margin = 2) {
+  // Create a snake placed along the perimeter of the board (with an optional $margin)
+  private createSnake(index: number, id: number, margin = 2): Snake {
     const [width, height] = [this.props.columns - 2 * margin, this.props.rows - 2 * margin];
     const perimeter = width * 2 + height * 2 - 4;
     const vertices = [0, width - 1, width + height - 2, width + height + width - 3, perimeter];
+
     function distanceToPosition(distance: number): [Position, Direction] {
       distance = distance % perimeter;
       const side = vertices.findIndex((vertex, i) => {
         const nextVertex = vertices[i + 1];
         return nextVertex && vertex <= distance && distance < nextVertex;
       });
-      // Position relative to the inner rectangle (ignore margins)
+      // Define the position relative to the inner rectangle (ignore margins)
       let position: Position, direction: Direction;
       switch (side) {
         case 0:
@@ -95,47 +93,24 @@ export default class Game {
       positions.push(squarePosition);
       direction = squareDirection;
     }
-
     return new Snake(id, positions, direction);
   }
-
   private moveSnake(snake: Snake) {
-    const [row, col] = snake.getNextPosition();
-    if (this.isOutOfBounds([row, col]) || this.board[row][col].hasObstacle(snake)) {
+    const position = snake.getNextPosition();
+    if (this.board.outOfBounds(position) || this.board.get(position).hasObstacle(snake)) {
       snake.alive = false;
       return;
     }
-    const newNode = this.board[row][col];
-    const hasFruit = newNode.fruits.has(snake);
-    if (hasFruit) {
-      snake.extendTo([row, col]);
-      snake.score++;
-      // TODO: New fruit
+    const gotFruit = this.board.get(position).fruits.has(snake);
+    if (gotFruit) {
+      snake.extendTo(position); // Grow the snake
+      snake.score++; // Increase its score
+      this.board.addSnakePosition(snake, position); // Add the new position on the board
+      snake.fruit = this.board.addFruit(snake); // Generate a new fruit
     } else {
-      snake.moveTo([row, col]);
+      const oldTail = snake.moveTo(position); // Move the snake
+      this.board.addSnakePosition(snake, position); // Update the board: add the new head
+      this.board.removeSnakePosition(snake, oldTail); // Update the board: delete the old tail
     }
-  }
-
-  private updateBoard() {
-    // Clear all snakes and fruits
-    this.board.forEach(row => {
-      row.forEach(node => {
-        node.clearObjects();
-      });
-    });
-
-    // Rebuild
-    this.snakes.forEach(snake => {
-      snake.positions.forEach(([row, col]) => {
-        this.board[row][col].snakes.add(snake);
-      });
-      const [fruitRow, fruitCol] = snake.fruit;
-      // Assert that the fruit's position is defined and add it to the board
-      fruitRow && this.board[fruitRow][fruitCol].fruits.add(snake);
-    });
-  }
-
-  isOutOfBounds([row, col]: Position) {
-    return row < 0 || col < 0 || row >= this.props.rows || col >= this.props.columns;
   }
 }

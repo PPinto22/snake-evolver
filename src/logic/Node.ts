@@ -1,11 +1,14 @@
 import Snake from "./Snake";
+import { Position } from "./types";
 
 export default class Node {
+  position: Position;
   isWall: boolean;
   snakes: Set<Snake>;
   fruits: Set<Snake>;
 
-  constructor(isWall = false) {
+  constructor(position: Position, isWall = false) {
+    this.position = position;
     this.isWall = isWall;
     this.snakes = new Set<Snake>();
     this.fruits = new Set<Snake>();

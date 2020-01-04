@@ -4,7 +4,7 @@ export default class Snake {
   id: number;
   positions: Position[];
   direction: Direction;
-  fruit: Position;
+  fruit: Position | null;
   score: number;
   alive: boolean;
   color: string;
@@ -13,7 +13,7 @@ export default class Snake {
     id: number,
     positions: Position[],
     direction: Direction,
-    fruit: Position = [NaN, NaN]
+    fruit: Position | null = null
   ) {
     this.id = id;
     this.positions = positions;
