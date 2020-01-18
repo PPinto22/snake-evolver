@@ -1,12 +1,12 @@
 import React from "react";
-import Game, { GameProps } from "../logic/Game";
+import Game from "../logic/Game";
 import "./style/GameCanvas.css";
 import Snake from "../logic/Snake";
 
-interface GameCanvasProps extends GameProps {
+interface GameCanvasProps {
+  game: Game;
   width: number;
   height: number;
-  speed: number; // frames per second. TODO: Make this state?
 }
 
 export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
@@ -15,32 +15,38 @@ export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
   unit_height: number;
   canvas: React.RefObject<HTMLCanvasElement>;
   ctx: CanvasRenderingContext2D | undefined;
-  intervalID: number | undefined;
-
-  static defaultProps = {
-    speed: 2,
-    snakeLength: 4
-  };
 
   constructor(props: GameCanvasProps) {
     super(props);
-    this.game = new Game(this.props);
-    this.unit_width = this.props.width / this.props.columns;
-    this.unit_height = this.props.height / this.props.rows;
+    this.game = this.props.game; // alias
+    this.game.callbacks = {
+      // TODO: ... events?
+      onMove: this.display.bind(this),
+      onEnd: this.display.bind(this)
+    };
+    this.unit_width = this.props.width / this.game.props.columns;
+    this.unit_height = this.props.height / this.game.props.rows;
     this.canvas = React.createRef<HTMLCanvasElement>();
   }
 
   display() {
     let ctx = this.ctx!;
     ctx.clearRect(0, 0, this.props.width, this.props.height);
-    this.game.state === "running" ? this.displayGame() : this.displayGameOver();
+    switch(this.game.state){
+      case "running":
+      case "stopped":
+        this.displayGame();
+        break;
+      case "ended":
+        this.displayGameOver();
+    }
   }
 
   displayGameOver() {
     let ctx = this.ctx!;
     ctx.save();
     ctx.fillStyle = "black";
-    ctx.font = "bold 36px Open Sans";
+    ctx.font = "bold 36px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("Game Over", this.props.width / 2, this.props.height / 2);
     ctx.restore();
@@ -90,12 +96,12 @@ export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
     let ctx = this.ctx!;
     ctx.save();
     ctx.beginPath();
-    for (var c = 0; c <= this.props.columns; c++) {
+    for (var c = 0; c <= this.game.props.columns; c++) {
       let x = Math.min(c * this.unit_width + 0.5, this.props.width - 0.5);
       ctx.moveTo(x, 0);
       ctx.lineTo(x, this.props.height);
     }
-    for (var r = 0; r <= this.props.rows; r++) {
+    for (var r = 0; r <= this.game.props.rows; r++) {
       let y = Math.min(r * this.unit_height + 0.5, this.props.height - 0.5);
       ctx.moveTo(0, y);
       ctx.lineTo(this.props.width, y);
@@ -105,22 +111,9 @@ export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
     ctx.restore();
   }
 
-  start() {
-    this.display();
-    this.intervalID = window.setInterval(() => {
-      this.game.next();
-      this.display();
-      if (this.game.state === "ended") window.clearInterval(this.intervalID);
-    }, (1 / this.props.speed) * 1000);
-  }
-
   componentDidMount() {
     this.ctx = this.canvas.current!.getContext("2d")!;
-    this.start();
-  }
-
-  componentWillUnmount() {
-    window.clearInterval(this.intervalID);
+    this.display();
   }
 
   render() {

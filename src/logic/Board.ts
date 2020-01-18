@@ -1,7 +1,7 @@
 import Node from "./Node";
-import { Position } from "./types";
+import { Position, Direction, Vector } from "./types";
 import Snake from "./Snake";
-import { choice } from "./util";
+import { choice } from "./utils";
 
 export default class Board {
   private grid: Node[][];
@@ -22,8 +22,16 @@ export default class Board {
     this.grid.map(row => row.map(node => !node.isWall && this.freeSpaces.add(node)));
   }
 
-  get([row, col]: Position): Node {
-    return this.grid[row][col];
+  clearObjects() {
+    this.grid.forEach(row =>
+      row.forEach(node => {
+        node.clearObjects();
+      })
+    );
+  }
+
+  get([row, col]: Position): Node | undefined {
+    return this.grid[row]?.[col];
   }
 
   addSnake(snake: Snake) {
@@ -48,8 +56,8 @@ export default class Board {
     this.grid[row][col].snakes.delete(snake);
   }
 
-  addFruit(snake: Snake, position = this.getRandomFreeSpace(snake)): Position | null {
-    if (!position) return null; // No available positions
+  addFruit(snake: Snake, position = this.getRandomFreeSpace(snake)): Position | undefined {
+    if (!position) return; // No available positions
     const [row, col] = position;
     this.grid[row][col].fruits.add(snake);
     return position;
@@ -59,7 +67,7 @@ export default class Board {
     this.grid[row][col].fruits.delete(snake);
   }
 
-  getRandomFreeSpace(snake?: Snake): Position | null {
+  getRandomFreeSpace(snake?: Snake): Position | undefined {
     let snakeFreeSpaces = new Set(this.freeSpaces);
     if (snake) {
       snake.positions.forEach(([row, col]) => {
@@ -90,5 +98,22 @@ export default class Board {
 
   outOfBounds([row, col]: Position): boolean {
     return row < 0 || col < 0 || row >= this.rows || col >= this.columns;
+  }
+
+  static getVector(direction: Direction): Vector {
+    //  .---> cols (y)
+    //  |
+    //  |
+    //  V rows (x)
+    switch (direction) {
+      case "up":
+        return [-1, 0];
+      case "down":
+        return [1, 0];
+      case "right":
+        return [0, 1];
+      case "left":
+        return [0, -1];
+    }
   }
 }

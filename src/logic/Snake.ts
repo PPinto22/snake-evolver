@@ -1,27 +1,47 @@
 import { Direction, Position } from "./types";
+import Board from "./Board";
+import Brain from "./Brain";
 
 export default class Snake {
-  id: number;
-  positions: Position[];
-  direction: Direction;
-  fruit: Position | null;
-  score: number;
-  alive: boolean;
-  color: string;
+  // Details
+  id: number;  // An ID used to generate a color
+  color: string; // A color in hex (e.g. #56eec7)
+  // Logic
+  positions: Position[]; // Pieces of the snake, ordered from tail to head
+  direction: Direction; // Direction the snake is moving
+  fruit?: Position; // Position of the fruit
+  // Scores and state
+  score: number;  // Points (fitness)
+  fruits: number; // Nr. of fruits eaten
+  timeoutCounter: number; // Number of moves without eating a fruit
+  alive: boolean; 
+  // Neural network
+  brain?: Brain; 
 
   constructor(
     id: number,
     positions: Position[],
     direction: Direction,
-    fruit: Position | null = null
+    fruit?: Position
   ) {
     this.id = id;
+    this.color = this.generateColor();
     this.positions = positions;
     this.direction = direction;
     this.fruit = fruit;
+    this.fruits = 0;
     this.score = 0;
+    this.timeoutCounter = 0;
     this.alive = true;
-    this.color = this.generateColor();
+  }
+
+  setBrain(network: any, board: Board) {
+    this.brain = new Brain(this, network, board);
+  }
+
+  think(): this {
+    this.brain?.activate();
+    return this;
   }
 
   getHead(): Position {
@@ -32,12 +52,9 @@ export default class Snake {
   }
 
   getNextPosition(): Position {
-    const head = this.getHead();
-    const delta = [
-      this.direction === "down" ? 1 : this.direction === "up" ? -1 : 0,
-      this.direction === "right" ? 1 : this.direction === "left" ? -1 : 0
-    ];
-    return [head[0] + delta[0], head[1] + delta[1]];
+    const [hx, hy] = this.getHead();
+    const [vx, vy] = Board.getVector(this.direction);
+    return [hx + vx, hy + vy];
   }
 
   moveTo(position: Position): Position {
