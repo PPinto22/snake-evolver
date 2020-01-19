@@ -3,7 +3,8 @@ import Snake from "./Snake";
 import { Direction, Position } from "./types";
 import { sleep } from "./utils";
 
-type GameState = "stopped" | "running" | "ended";
+type State = "running" | "stopped"  | "ended";
+type EventName = "onMove" | "onEnd";
 
 export interface GameProps {
   rows: number;
@@ -13,27 +14,30 @@ export interface GameProps {
   speed?: number;
 }
 
-export interface Callbacks {
-  onEnd?(): void;
-  onMove?(): void;
+interface Callbacks {
+  onMove: (() => void)[]; // List of functions to execute after each move
+  onEnd: (() => void)[]; // List of functions to execute when the game ends
 }
 
 export default class Game {
   props: GameProps;
-  callbacks?: Callbacks;
+  callbacks: Callbacks;
   board: Board;
   snakes!: Snake[];
-  state: GameState;
-  timeOut: number; // TODO: Kill snakes after this amount of iterations without eating a fruit
+  state: State;
+  timeOut: number;
   iteration: number; // Current iteration (i.e. move)
   sleepTime: number; // Number of milliseconds to sleep between moves (1000/speed)
 
   public static readonly POINTS_PER_FRUIT = 20;
   public static readonly POINTS_PER_MOVE = 1;
 
-  constructor(props: GameProps, callbacks?: Callbacks, neuralNetworks?: any[]) {
+  constructor(props: GameProps, neuralNetworks?: any[]) {
     this.props = props;
-    this.callbacks = callbacks;
+    this.callbacks = {
+      onMove: [],
+      onEnd: []
+    };
 
     // TODO: Walls
     this.board = new Board(this.props.rows, this.props.columns);
@@ -44,6 +48,11 @@ export default class Game {
 
     this.timeOut = 2 * (this.props.rows + this.props.columns);
     this.sleepTime = this.props.speed ? 1000 / this.props.speed : 0;
+  }
+
+  addCallback(event: EventName, callback: (...args: any[]) => void) {
+    this.callbacks[event]?.push(callback);
+    return this;
   }
 
   initSnakes(neuralNetworks?: any[]) {
@@ -80,7 +89,7 @@ export default class Game {
     this.state = "stopped";
     this.iteration = 0;
     this.board.clearObjects();
-    const brains = this.initSnakes(this.snakes.map(snake => snake.brain?.network));
+    this.initSnakes(this.snakes.map(snake => snake.brain?.network));
   }
 
   // Game iteration: advance each snake one unit
@@ -89,11 +98,11 @@ export default class Game {
 
     this.iteration++;
     this.snakes.forEach(this.moveSnake.bind(this));
-    this.callbacks?.onMove?.();
+    this.callbacks.onMove.forEach(f => f());
 
     if (this.snakes.every(snake => !snake.alive)) {
       this.state = "ended";
-      this.callbacks?.onEnd?.();
+      this.callbacks.onEnd.forEach(f => f());
     }
   }
 
@@ -161,7 +170,6 @@ export default class Game {
       return;
     }
 
-    // const hasFruit = this.board.get(position)!.fruits.has(snake);
     if (hasFruit) {
       // Snake ate a fruit
       snake.extendTo(position); // Move and grow the snake
@@ -172,6 +180,7 @@ export default class Game {
       snake.timeoutCounter = 0;
       // Update the board
       this.board.addSnakePosition(snake, position);
+      this.board.deleteFruit(snake, position);
     } else {
       // No fruit
       const oldTail = snake.moveTo(position); // Move the snake

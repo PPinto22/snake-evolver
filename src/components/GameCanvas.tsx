@@ -19,11 +19,9 @@ export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
   constructor(props: GameCanvasProps) {
     super(props);
     this.game = this.props.game; // alias
-    this.game.callbacks = {
-      // TODO: ... events?
-      onMove: this.display.bind(this),
-      onEnd: this.display.bind(this)
-    };
+    this.game // Event handlers
+      .addCallback("onMove", this.display.bind(this))
+      .addCallback("onEnd", this.display.bind(this));
     this.unit_width = this.props.width / this.game.props.columns;
     this.unit_height = this.props.height / this.game.props.rows;
     this.canvas = React.createRef<HTMLCanvasElement>();
@@ -32,7 +30,7 @@ export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
   display() {
     let ctx = this.ctx!;
     ctx.clearRect(0, 0, this.props.width, this.props.height);
-    switch(this.game.state){
+    switch (this.game.state) {
       case "running":
       case "stopped":
         this.displayGame();
@@ -61,18 +59,13 @@ export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
   }
 
   displayFruit(snake: Snake) {
-    if(!snake.fruit) return; // No fruit to display; skip.
+    if (!snake.fruit) return; // No fruit to display; skip.
     const [row, col] = snake.fruit;
     let ctx = this.ctx!;
     ctx.save();
 
     ctx.fillStyle = snake.color;
-    ctx.fillRect(
-      col * this.unit_width,
-      row * this.unit_height,
-      this.unit_width,
-      this.unit_height
-    );
+    ctx.fillRect(col * this.unit_width, row * this.unit_height, this.unit_width, this.unit_height);
 
     ctx.restore();
   }

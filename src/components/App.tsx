@@ -20,22 +20,15 @@ export default class App extends React.Component {
     this.evolver = new Evolver(this.game);
   }
 
-  async run(){
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      await this.evolver.evolve();
-    }
-  }
-
   componentDidMount() {
-    this.run();
+    this.evolver.run();
   }
 
   render() {
     return (
       <div id="app">
         <h1>Snake Evolver</h1>
-        <GameCanvas width={1000} height={500} game={this.game!} />
+        <GameCanvas width={1000} height={500} game={this.game} />
       </div>
     );
   }
