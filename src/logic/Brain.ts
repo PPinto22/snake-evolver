@@ -14,17 +14,17 @@ export default class Brain {
     this.board = board;
   }
 
-  // Activates the neural network and changes the snake's direction 
+  // Activates the neural network and changes the snake's direction
   // Possibilities: turn left, turn right, continue forward
   activate(): void {
     this.network.clear();
     const inputs = this.getInputs();
-    console.debug(inputs);
     const outputs: [number, number] = this.network.activate(inputs);
-    console.debug(outputs);
     const [index, value] = max(outputs)!;
-    if(value >= 0.5){ // Only make a turn if the output's activation is significant
-      this.snake.direction = index === 0 ? leftOf(this.snake.direction) : rightOf(this.snake.direction);
+    if (value >= 0.5) {
+      // Only make a turn if the output's activation is significant
+      this.snake.direction =
+        index === 0 ? leftOf(this.snake.direction) : rightOf(this.snake.direction);
     }
   }
 

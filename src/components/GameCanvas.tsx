@@ -3,20 +3,20 @@ import Game from "../logic/Game";
 import "./style/GameCanvas.css";
 import Snake from "../logic/Snake";
 
-interface GameCanvasProps {
+interface Props {
   game: Game;
   width: number;
   height: number;
 }
 
-export default class GameCanvas extends React.Component<GameCanvasProps, {}> {
+export default class GameCanvas extends React.Component<Props, {}> {
   game: Game;
   unit_width: number;
   unit_height: number;
   canvas: React.RefObject<HTMLCanvasElement>;
   ctx: CanvasRenderingContext2D | undefined;
 
-  constructor(props: GameCanvasProps) {
+  constructor(props: Props) {
     super(props);
     this.game = this.props.game; // alias
     this.game // Event handlers

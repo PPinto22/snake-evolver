@@ -22,6 +22,7 @@ export default class Evolver {
   game: Game;
   params: Parameters;
   neat: any; // neataptic.Neat
+  generation: number;
   state: State;
   callbacks: Callbacks;
 
@@ -40,11 +41,17 @@ export default class Evolver {
       this.evaluatePopulation.bind(this), // Evaluation function
       this.params
     );
+    this.generation = 0;
     this.state = "stopped";
   }
 
   addCallback(event: EventName, callback: (...args: any[]) => void) {
-    this.callbacks[event]?.push(callback);
+    this.callbacks[event].push(callback);
+    return this;
+  }
+
+  removeCallback(event: EventName, callback: (...args: any[]) => void) {
+    this.callbacks[event] = this.callbacks[event].filter(cb => cb !== callback);
     return this;
   }
 
@@ -68,19 +75,25 @@ export default class Evolver {
     for (let i = 0; i < this.params.popsize!; i++) {
       population[i].score = this.game.snakes[i].score;
     }
-    this.game.reset();
   }
 
   async run() {
     this.state = "running";
     while (this.state === "running") {
+      // await this.evolve();
+      this.generation += 1;
       this.callbacks.preGen.forEach(f => f());
-      await this.evolve();
+      await this.neat.evolve();
       this.callbacks.postGen.forEach(f => f());
+      this.game.reset();
     }
   }
 
-  async evolve() {
-    await this.neat.evolve();
-  }
+  // async evolve() {
+  //   this.generation += 1;
+  //   this.callbacks.preGen.forEach(f => f());
+  //   await this.neat.evolve();
+  //   this.callbacks.postGen.forEach(f => f());
+  //   this.game.reset();
+  // }
 }

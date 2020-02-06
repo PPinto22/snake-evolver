@@ -3,6 +3,7 @@ import "./style/App.css";
 import GameCanvas from "./GameCanvas";
 import Game from "../logic/Game";
 import Evolver from "../logic/Evolver";
+import EvolutionPlot from "./EvolutionPlot";
 
 export default class App extends React.Component {
   game: Game;
@@ -28,6 +29,7 @@ export default class App extends React.Component {
     return (
       <div id="app">
         <h1>Snake Evolver</h1>
+        <EvolutionPlot evolver={this.evolver} />
         <GameCanvas width={1000} height={500} game={this.game} />
       </div>
     );
