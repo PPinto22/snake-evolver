@@ -3,7 +3,7 @@ import Snake from "./Snake";
 import { Direction, Position } from "./types";
 import { sleep } from "./utils";
 
-type State = "running" | "stopped"  | "ended";
+type State = "running" | "stopped" | "ended";
 type EventName = "onMove" | "onEnd";
 
 export interface GameProps {
@@ -48,6 +48,14 @@ export default class Game {
 
     this.timeOut = 2 * (this.props.rows + this.props.columns);
     this.sleepTime = this.props.speed ? 1000 / this.props.speed : 0;
+  }
+
+  setSpeed(fps: number) {
+    // this.props.speed = fps;
+    this.sleepTime = 1000 / fps;
+    if (this.state !== "ended")
+      this.state = fps > 0 ? "running" : "stopped"; // FIXME: Not pausing on 0
+    console.debug(`input speed: ${fps}; prop: ${this.props.speed}; state: ${this.state}`)
   }
 
   addCallback(event: EventName, callback: (...args: any[]) => void) {

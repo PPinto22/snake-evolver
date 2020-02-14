@@ -4,6 +4,7 @@ import GameCanvas from "./GameCanvas";
 import Game from "../logic/Game";
 import Evolver from "../logic/Evolver";
 import EvolutionPlot from "./EvolutionPlot";
+import Slider from "./SpeedSlider";
 
 export default class App extends React.Component {
   game: Game;
@@ -30,6 +31,7 @@ export default class App extends React.Component {
       <div id="app">
         <h1>Snake Evolver</h1>
         <EvolutionPlot evolver={this.evolver} />
+        <Slider defaultValue={this.game.props.speed} onChange={(event, value) => this.game.setSpeed(value)} />
         <GameCanvas width={1000} height={500} game={this.game} />
       </div>
     );

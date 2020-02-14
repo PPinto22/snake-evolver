@@ -67,12 +67,9 @@ export default class EvolutionPlot extends React.Component<Props, State> {
       xaxis: { title: "Generation" },
       yaxis: { title: "Score" }
     };
-    
+
     return (
-      <Plot
-        data={data}
-        layout={layout}
-      />
+      <Plot className="evolution-plot" data={data} layout={layout} />
     );
   }
 }
