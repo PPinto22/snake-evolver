@@ -13,7 +13,7 @@ export default class SpeedSlider extends Component<Props> {
                 <Typography>
                     Speed
                 </Typography>
-                <Slider style={{width: "100px"}}
+                <Slider style={{width: "600px"}}
                     valueLabelFormat={(value) => { return `${value}x`; }}
                     valueLabelDisplay="auto"
                     defaultValue={this.props.defaultValue}

@@ -1,14 +1,15 @@
 import * as neatap from "neataptic";
 import Game from "./Game";
+import Brain from "./Brain";
 
 type State = "running" | "stopped";
 type EventName = "preGen" | "postGen";
 
 export interface Parameters {
-  popsize?: number; // This value is overwritten by game.props.snakes
-  elitism?: number;
-  mutationRate?: number;
-  mutationAmount?: number;
+  popsize: number; // This value is overwritten by game.props.snakes
+  elitism: number;
+  mutationRate: number;
+  mutationAmount: number;
   // This means the fitness function takes the whole population as input.
   fitnessPopulation: true;
 }
@@ -21,14 +22,26 @@ interface Callbacks {
 export default class Evolver {
   game: Game;
   params: Parameters;
+  brainType: typeof Brain;
   neat: any; // neataptic.Neat
   generation: number;
   state: State;
   callbacks: Callbacks;
 
-  constructor(game: Game, params?: Parameters) {
+  static defaultParams(popsize: number): Parameters {
+    return {
+      popsize: popsize,
+      elitism: Math.round(0.2 * popsize),
+      mutationRate: 0.4,
+      mutationAmount: 3,
+      fitnessPopulation: true
+    };
+  }
+
+  constructor(game: Game, params?: Partial<Parameters>) {
     if (game.props.snakes! < 2) throw new Error("Popsize must be at least 2");
     this.game = game;
+    this.brainType = (this.game.props.brainType as unknown) as typeof Brain;
     this.callbacks = {
       preGen: [],
       postGen: []
@@ -36,8 +49,8 @@ export default class Evolver {
 
     this.params = { ...Evolver.defaultParams(game.props.snakes), ...params };
     this.neat = new neatap.Neat(
-      5, // NN inputs
-      2, // NN outputs
+      this.brainType.inputSize, // NN inputs
+      this.brainType.outputSize, // NN outputs
       this.evaluatePopulation.bind(this), // Evaluation function
       this.params
     );
@@ -59,16 +72,6 @@ export default class Evolver {
     this.game.setBrains(this.neat.population);
   }
 
-  static defaultParams(popsize: number): Parameters {
-    return {
-      popsize: popsize,
-      elitism: Math.round(0.2 * popsize),
-      mutationRate: 0.4,
-      mutationAmount: 3,
-      fitnessPopulation: true
-    };
-  }
-
   async evaluatePopulation(population: any[]) {
     this.game.setBrains(this.neat.population); // Associate each neural network with the respective snake
     await this.game.run();
@@ -80,7 +83,6 @@ export default class Evolver {
   async run() {
     this.state = "running";
     while (this.state === "running") {
-      // await this.evolve();
       this.generation += 1;
       this.callbacks.preGen.forEach(f => f());
       await this.neat.evolve();
@@ -88,12 +90,4 @@ export default class Evolver {
       this.game.reset();
     }
   }
-
-  // async evolve() {
-  //   this.generation += 1;
-  //   this.callbacks.preGen.forEach(f => f());
-  //   await this.neat.evolve();
-  //   this.callbacks.postGen.forEach(f => f());
-  //   this.game.reset();
-  // }
 }

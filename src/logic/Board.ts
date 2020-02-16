@@ -1,7 +1,7 @@
 import Node from "./Node";
-import { Position, Direction, Vector } from "./types";
+import { Position, Direction, Vector } from "./util/types";
 import Snake from "./Snake";
-import { choice } from "./utils";
+import { choice } from "./util/misc";
 
 export default class Board {
   private grid: Node[][];

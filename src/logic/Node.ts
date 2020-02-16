@@ -1,5 +1,5 @@
 import Snake from "./Snake";
-import { Position } from "./types";
+import { Position } from "./util/types";
 
 export default class Node {
   position: Position;

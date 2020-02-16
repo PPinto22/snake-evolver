@@ -1,7 +1,9 @@
 import Board from "./Board";
 import Snake from "./Snake";
-import { Direction, Position } from "./types";
-import { sleep } from "./utils";
+import { Direction, Position } from "./util/types";
+import { sleep } from "./util/misc";
+import ScoreService, { DefaultScoreService } from "./ScoreService";
+import Brain, { DefaultBrain } from "./Brain";
 
 type State = "running" | "stopped" | "ended";
 type EventName = "onMove" | "onEnd";
@@ -12,6 +14,9 @@ export interface GameProps {
   snakes: number;
   snakeLength: number;
   speed?: number;
+  scoreService: ScoreService;
+  brainType: new (...args: any[]) => Brain;
+  neuralNetworks?: any[];
 }
 
 interface Callbacks {
@@ -21,19 +26,26 @@ interface Callbacks {
 
 export default class Game {
   props: GameProps;
-  callbacks: Callbacks;
+  callbacks: Callbacks; // Functions to execute at certain events
   board: Board;
   snakes!: Snake[];
   state: State;
-  timeOut: number;
-  iteration: number; // Current iteration (i.e. move)
+  timeOut: number; // Kill snakes after 'timeOut' moves without having eaten a fruit
+  iteration: number; // Current move iteration
   sleepTime: number; // Number of milliseconds to sleep between moves (1000/speed)
 
-  public static readonly POINTS_PER_FRUIT = 20;
-  public static readonly POINTS_PER_MOVE = 1;
+  static defaultProps: GameProps = {
+    rows: 25,
+    columns: 50,
+    snakes: 20,
+    snakeLength: 4,
+    speed: 10,
+    scoreService: new DefaultScoreService(),
+    brainType: DefaultBrain
+  };
 
-  constructor(props: GameProps, neuralNetworks?: any[]) {
-    this.props = props;
+  constructor(props?: Partial<GameProps>) {
+    this.props = { ...Game.defaultProps, ...props };
     this.callbacks = {
       onMove: [],
       onEnd: []
@@ -41,7 +53,7 @@ export default class Game {
 
     // TODO: Walls
     this.board = new Board(this.props.rows, this.props.columns);
-    this.initSnakes(neuralNetworks); // initializes this.snakes
+    this.initSnakes(); // initializes this.snakes
 
     this.iteration = 0;
     this.state = "stopped";
@@ -51,11 +63,9 @@ export default class Game {
   }
 
   setSpeed(fps: number) {
-    // this.props.speed = fps;
+    this.props.speed = fps;
     this.sleepTime = 1000 / fps;
-    if (this.state !== "ended")
-      this.state = fps > 0 ? "running" : "stopped"; // FIXME: Not pausing on 0
-    console.debug(`input speed: ${fps}; prop: ${this.props.speed}; state: ${this.state}`)
+    this.state = fps > 0 ? "running" : "stopped";
   }
 
   addCallback(event: EventName, callback: (...args: any[]) => void) {
@@ -63,7 +73,7 @@ export default class Game {
     return this;
   }
 
-  initSnakes(neuralNetworks?: any[]) {
+  initSnakes() {
     this.snakes = Array.from({ length: this.props.snakes }, (_, i) => {
       return this.createSnake(i, i);
     });
@@ -72,7 +82,7 @@ export default class Game {
     // Generate fruits for each snake
     this.snakes.forEach(snake => (snake.fruit = this.board.addFruit(snake)));
     // Add a neural network to each snake
-    if (neuralNetworks) this.setBrains(neuralNetworks);
+    if (this.props.neuralNetworks) this.setBrains(this.props.neuralNetworks);
   }
 
   // Set a neural network for each snake
@@ -80,14 +90,18 @@ export default class Game {
     if (neuralNetworks.length !== this.props.snakes)
       throw new Error("The number of brains does not match the number of snakes");
 
+    this.props.neuralNetworks = neuralNetworks;
     for (let i = 0; i < this.props.snakes; i++) {
-      if (neuralNetworks[i]) this.snakes[i].setBrain(neuralNetworks[i], this.board);
+      if (neuralNetworks[i])
+        this.snakes[i].setBrain(neuralNetworks[i], this.board, this.props.brainType);
     }
   }
 
   async run() {
-    this.state = "running";
-    while (this.state === "running") {
+    this.state = "running" as State;
+    while (this.state !== "ended") {
+      while (this.state === "stopped") await sleep(400); // TODO: Avoid busy-waiting?
+
       this.move();
       await sleep(this.sleepTime);
     }
@@ -97,7 +111,7 @@ export default class Game {
     this.state = "stopped";
     this.iteration = 0;
     this.board.clearObjects();
-    this.initSnakes(this.snakes.map(snake => snake.brain?.network));
+    this.initSnakes();
   }
 
   // Game iteration: advance each snake one unit
@@ -167,23 +181,22 @@ export default class Game {
     if (!snake.alive) return; // Snake is already dead (should never happen)
     // Activate the neural network and get the next position
     const position = snake.think().getNextPosition();
-    const hasFruit = !!this.board.get(position)?.fruits.has(snake);
+    const ateFruit = !!this.board.get(position)?.fruits.has(snake);
     // Snake kill conditions
     if (
       this.board.outOfBounds(position) || // Position out of bounds of the board
       this.board.get(position)!.hasObstacle(snake) || // Position is an obstacle
-      (!hasFruit && snake.timeoutCounter >= this.timeOut) // Hit the limit of moves without eating a fruit
+      (!ateFruit && snake.timeoutCounter >= this.timeOut) // Hit the limit of moves without eating a fruit
     ) {
       snake.alive = false;
       return;
     }
 
-    if (hasFruit) {
+    if (ateFruit) {
       // Snake ate a fruit
       snake.extendTo(position); // Move and grow the snake
       snake.fruit = this.board.addFruit(snake); // Generate a new fruit
-      // Update score/counters
-      snake.score += Game.POINTS_PER_FRUIT + Game.POINTS_PER_MOVE;
+      // Update counters
       snake.fruits += 1;
       snake.timeoutCounter = 0;
       // Update the board
@@ -192,12 +205,13 @@ export default class Game {
     } else {
       // No fruit
       const oldTail = snake.moveTo(position); // Move the snake
-      // Update score/counters
-      snake.score += Game.POINTS_PER_MOVE;
+      // Update counters
       snake.timeoutCounter += 1;
       // Update the board
       this.board.addSnakePosition(snake, position);
       this.board.removeSnakePosition(snake, oldTail);
     }
+    // Update snake score
+    snake.score += this.props.scoreService.getMoveScore(this.board, snake, { position, ateFruit });
   }
 }

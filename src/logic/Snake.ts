@@ -1,29 +1,24 @@
-import { Direction, Position } from "./types";
+import { Direction, Position } from "./util/types";
 import Board from "./Board";
 import Brain from "./Brain";
 
 export default class Snake {
   // Details
-  id: number;  // An ID used to generate a color
+  id: number; // An ID used to generate a color
   color: string; // A color in hex (e.g. #56eec7)
   // Logic
   positions: Position[]; // Pieces of the snake, ordered from tail to head
   direction: Direction; // Direction the snake is moving
   fruit?: Position; // Position of the fruit
   // Scores and state
-  score: number;  // Points (fitness)
+  score: number; // Points (fitness)
   fruits: number; // Nr. of fruits eaten
   timeoutCounter: number; // Number of moves without eating a fruit
-  alive: boolean; 
+  alive: boolean;
   // Neural network
-  brain?: Brain; 
+  brain?: Brain;
 
-  constructor(
-    id: number,
-    positions: Position[],
-    direction: Direction,
-    fruit?: Position
-  ) {
+  constructor(id: number, positions: Position[], direction: Direction, fruit?: Position) {
     this.id = id;
     this.color = this.generateColor();
     this.positions = positions;
@@ -35,8 +30,8 @@ export default class Snake {
     this.alive = true;
   }
 
-  setBrain(network: any, board: Board) {
-    this.brain = new Brain(this, network, board);
+  setBrain(network: any, board: Board, brainConstructor: new (...args: any[]) => Brain) {
+    this.brain = new brainConstructor(this, network, board);
   }
 
   think(): this {

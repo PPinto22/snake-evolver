@@ -1,18 +1,39 @@
 import Snake from "./Snake";
 import Board from "./Board";
-import { Vector } from "./types";
-import { manhattanDistance, leftOf, rightOf, max } from "./utils";
+import { Vector, Position } from "./util/types";
+import { max } from "./util/misc";
+import {
+  manhattanDistance,
+  directions,
+  positionDiff,
+  rotateAxis,
+  vectorAngle
+} from "./util/geometry";
 
-export default class Brain {
+export default abstract class Brain {
   snake: Snake;
   board: Board;
   network: any;
 
+  // Constants
+  static inputSize = NaN; // Number of inputs. NOTE: Should be ABSTRACT; must be OVERRIDDEN!
+  static outputSize = 2; // Number of outputs
+
   constructor(snake: Snake, network: any, board: Board) {
+    // Assert that the inputs and outputs of the network match Brain.inputSize and Brain.outputSize
+    const thisClass = this.constructor as typeof Brain;
+    if (network.input !== thisClass.inputSize || network.output !== thisClass.outputSize)
+      throw Error(
+        `The number of inputs or outputs defined in Brain do not match the neural network's.`
+      );
+
     this.snake = snake;
     this.network = network;
     this.board = board;
   }
+
+  // Calculates the inputs to feed into the neural network:
+  abstract getInputs(): number[];
 
   // Activates the neural network and changes the snake's direction
   // Possibilities: turn left, turn right, continue forward
@@ -21,27 +42,26 @@ export default class Brain {
     const inputs = this.getInputs();
     const outputs: [number, number] = this.network.activate(inputs);
     const [index, value] = max(outputs)!;
-    if (value >= 0.5) {
+    if (value >= 0.4) {
       // Only make a turn if the output's activation is significant
       this.snake.direction =
-        index === 0 ? leftOf(this.snake.direction) : rightOf(this.snake.direction);
+        index === 0
+          ? directions.leftOf(this.snake.direction)
+          : directions.rightOf(this.snake.direction);
     }
   }
 
-  // Calculates the inputs to feed into the neural network:
-  // distance to nearest obstacle following the current direction
-  // distance to nearest obstacle to the left of the current direction
-  // distance to nearest obstacle to the right of the current direction
-  // manhattan distance to fruit
-  // fruit angle relative to the current direction
-  getInputs(): number[] {
-    return [
-      this.distanceToObstacle(Board.getVector(this.snake.direction)),
-      this.distanceToObstacle(Board.getVector(leftOf(this.snake.direction))),
-      this.distanceToObstacle(Board.getVector(rightOf(this.snake.direction))),
-      this.distanceToFruit(),
-      this.fruitAngle()
-    ];
+  // Position of the fruit relative to the snake's head and movement
+  relativeFruitPosition(): Position | undefined {
+    if (!this.snake.fruit) return undefined;
+
+    const vector = positionDiff(this.snake.getHead(), this.snake.fruit); // vector head->fruit
+    // fruit's position relative to the snake's head and movement
+    const relativePosition: Position = rotateAxis(
+      vector,
+      vectorAngle(Board.getVector(this.snake.direction))
+    );
+    return relativePosition;
   }
 
   // Input: direction vector
@@ -68,15 +88,56 @@ export default class Brain {
   // Negative angle: fruit is to the right of the snake
   fruitAngle(): number {
     if (!this.snake.fruit) return NaN;
-    const [hx, hy] = this.snake.getHead();
-    const [fx, fy] = this.snake.fruit;
-    const [dx, dy] = [fx - hx, fy - hy]; // vector head->fruit
-    const [mx, my] = Board.getVector(this.snake.direction); // unit vector of the snake's direction
-    const alpha = Math.atan2(my, mx); // angle of the snake's movement (relative to the board's [1, 0] vector), in radians
-    const [px, py] = [
-      dx * Math.cos(alpha) + dy * Math.sin(alpha),
-      -dx * Math.sin(alpha) + dy * Math.cos(alpha)
-    ]; // fruit's position relative to the snake's axis of movement. https://en.wikipedia.org/wiki/Rotation_of_axes#cite_note-7
-    return Math.atan2(py, px) / Math.PI; // Angle of the fruit relative to the snake, squashed between -1 and 1.
+    const relativePosition = this.relativeFruitPosition()!;
+    return vectorAngle(relativePosition) / Math.PI; // Angle of the fruit relative to the snake, squashed between -1 and 1.
   }
 }
+
+export class DistancesAndFruitAngleBrain extends Brain {
+  static inputSize = 5;
+
+  // 1. distance to nearest obstacle following the current direction
+  // 2. distance to nearest obstacle to the left of the current direction
+  // 3. distance to nearest obstacle to the right of the current direction
+  // 4. manhattan distance to fruit
+  // 5. fruit angle relative to the current direction
+  getInputs(): number[] {
+    return [
+      this.distanceToObstacle(Board.getVector(this.snake.direction)),
+      this.distanceToObstacle(Board.getVector(directions.leftOf(this.snake.direction))),
+      this.distanceToObstacle(Board.getVector(directions.rightOf(this.snake.direction))),
+      this.distanceToFruit(),
+      this.fruitAngle()
+    ];
+  }
+}
+
+export class CloseObstaclesAndFruitVectorBrain extends Brain {
+  static inputSize = 5;
+
+  // Return 1 in the immediate vicinity;
+  // 0.5 if there is an obstacle at distance = 2;
+  // 0 otherwise
+  closeDistanceToObstacle(direction: Vector): number {
+    const dist = this.distanceToObstacle(direction);
+    return dist > 2 ? 0 : 1 / dist;
+  }
+
+  // 1. obstacle forward? 1/0
+  // 2. obstacle to the left? 1/0
+  // 3. obstacle to the right? 1/0
+  // 4. distance to fruit forward (+) or backward (-)
+  // 5. distance to fruit to the left (+) or right (-)
+  getInputs(): number[] {
+    const fruitPosition: Position = this.relativeFruitPosition() || [NaN, NaN];
+    return [
+      this.closeDistanceToObstacle(Board.getVector(this.snake.direction)),
+      this.closeDistanceToObstacle(Board.getVector(directions.leftOf(this.snake.direction))),
+      this.closeDistanceToObstacle(Board.getVector(directions.rightOf(this.snake.direction))),
+      fruitPosition[0],
+      fruitPosition[1]
+    ];
+  }
+}
+
+export const DefaultBrain = CloseObstaclesAndFruitVectorBrain;
