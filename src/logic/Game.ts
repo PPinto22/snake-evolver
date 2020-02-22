@@ -13,7 +13,7 @@ export interface GameProps {
   columns: number;
   snakes: number;
   snakeLength: number;
-  speed?: number;
+  speed: number;
   scoreService: ScoreService;
   brainType: new (...args: any[]) => Brain;
   neuralNetworks?: any[];
@@ -59,13 +59,14 @@ export default class Game {
     this.state = "stopped";
 
     this.timeOut = 2 * (this.props.rows + this.props.columns);
+    this.setSpeed(this.props.speed, false);
     this.sleepTime = this.props.speed ? 1000 / this.props.speed : 0;
   }
 
-  setSpeed(fps: number) {
+  setSpeed(fps: number = Infinity, updateState: boolean = true) {
     this.props.speed = fps;
     this.sleepTime = 1000 / fps;
-    this.state = fps > 0 ? "running" : "stopped";
+    if (updateState) this.state = fps > 0 ? "running" : "stopped";
   }
 
   addCallback(event: EventName, callback: (...args: any[]) => void) {

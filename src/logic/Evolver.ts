@@ -12,6 +12,7 @@ export interface Parameters {
   mutationAmount: number;
   // This means the fitness function takes the whole population as input.
   fitnessPopulation: true;
+  network?: any; // Network structure
 }
 
 interface Callbacks {
@@ -28,16 +29,6 @@ export default class Evolver {
   state: State;
   callbacks: Callbacks;
 
-  static defaultParams(popsize: number): Parameters {
-    return {
-      popsize: popsize,
-      elitism: Math.round(0.2 * popsize),
-      mutationRate: 0.4,
-      mutationAmount: 3,
-      fitnessPopulation: true
-    };
-  }
-
   constructor(game: Game, params?: Partial<Parameters>) {
     if (game.props.snakes! < 2) throw new Error("Popsize must be at least 2");
     this.game = game;
@@ -47,7 +38,7 @@ export default class Evolver {
       postGen: []
     };
 
-    this.params = { ...Evolver.defaultParams(game.props.snakes), ...params };
+    this.params = { ...this.defaultParams(), ...params };
     this.neat = new neatap.Neat(
       this.brainType.inputSize, // NN inputs
       this.brainType.outputSize, // NN outputs
@@ -56,6 +47,26 @@ export default class Evolver {
     );
     this.generation = 0;
     this.state = "stopped";
+  }
+
+  defaultParams(): Parameters {
+    return {
+      popsize: this.game.props.snakes,
+      elitism: Math.round(0.2 * this.game.props.snakes),
+      mutationRate: 0.4,
+      mutationAmount: 3,
+      fitnessPopulation: true,
+      // network: this.createNetwork()
+    };
+  }
+
+  // Constructs an initial network
+  createNetwork(): any {
+    return new neatap.architect.Perceptron(
+      this.brainType.inputSize, // inputs
+      10, // Neurons in hidden layer 1
+      this.brainType.outputSize // outputs
+    )
   }
 
   addCallback(event: EventName, callback: (...args: any[]) => void) {
@@ -84,9 +95,14 @@ export default class Evolver {
     this.state = "running";
     while (this.state === "running") {
       this.generation += 1;
+      console.debug(`Starting generation ${this.generation}`);
       this.callbacks.preGen.forEach(f => f());
       await this.neat.evolve();
       this.callbacks.postGen.forEach(f => f());
+      console.debug(`Finished generation ${this.generation}`);
+      const scores = this.game.snakes.map(snake => snake.score);
+      const max = Math.max(...scores);
+      console.debug(`Score: ${max}`);
       this.game.reset();
     }
   }

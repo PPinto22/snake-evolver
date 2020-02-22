@@ -57,15 +57,12 @@ export default class EvolutionPlot extends React.Component<Props, State> {
       {
         type: "scatter",
         x: this.state.generations,
-        y: this.state.max,
-        marker: {
-          color: "rgb(16, 32, 77)"
-        }
+        y: this.state.max
       }
     ];
     let layout: Partial<Layout> = {
       xaxis: { title: "Generation" },
-      yaxis: { title: "Score" }
+      yaxis: { title: "Fitness" }
     };
 
     return (
