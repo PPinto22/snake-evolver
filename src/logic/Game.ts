@@ -1,7 +1,7 @@
 import Board from "./Board";
 import Snake from "./Snake";
 import { Direction, Position } from "./util/types";
-import { sleep } from "./util/misc";
+import { sleep, timeIt } from "./util/misc";
 import ScoreService, { DefaultScoreService } from "./ScoreService";
 import Brain, { DefaultBrain } from "./Brain";
 
@@ -99,12 +99,17 @@ export default class Game {
   }
 
   async run() {
+    const moveFunction = this.move.bind(this);
     this.state = "running" as State;
     while (this.state !== "ended") {
-      while (this.state === "stopped") await sleep(400); // TODO: Avoid busy-waiting?
+      while (this.state === "stopped") await sleep(400);
 
-      this.move();
-      await sleep(this.sleepTime);
+      const [, elapsedTime] = timeIt(moveFunction);
+      // Wait some time between iterations according to the game speed
+      // If the game is running at max speed (fps=Infinity; sleepTime=0), sleep every 50 iterations (ad hoc)
+      // so as not to completely block the main thread
+      if (this.sleepTime !== 0 || this.iteration % 50 === 0)
+        await sleep(Math.max(this.sleepTime - elapsedTime, 0));
     }
   }
 

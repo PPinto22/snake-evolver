@@ -1,6 +1,5 @@
 import React from "react";
 import Game from "../logic/Game";
-import "./style/GameCanvas.css";
 import Snake from "../logic/Snake";
 
 interface Props {
@@ -36,7 +35,7 @@ export default class GameCanvas extends React.Component<Props, {}> {
         this.displayGame();
         break;
       case "ended":
-        this.displayGameOver();
+        // this.displayGameOver();
     }
   }
 

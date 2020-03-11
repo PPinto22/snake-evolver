@@ -1,0 +1,18 @@
+#app {
+  text-align: center;
+}
+
+.game {
+  border: 1px solid;
+  image-rendering: crisp-edges;
+}
+
+.speed-control {
+  justify-content: center;
+}
+
+.speed-control .speed-slider {
+  width: 150px;
+  margin-left: 15px;
+  margin-right: 20px;
+}

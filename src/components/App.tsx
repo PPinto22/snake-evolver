@@ -1,12 +1,13 @@
 import React from "react";
-import "./style/App.css";
 import GameCanvas from "./GameCanvas";
 import Game from "../logic/Game";
 import Evolver from "../logic/Evolver";
 import { AlignedDirectionScoreService } from "../logic/ScoreService";
 import EvolutionPlot from "./EvolutionPlot";
-import Slider from "./SpeedSlider";
+import SpeedControl from "./SpeedControl";
 import { CloseObstaclesAndFruitVectorBrain } from "../logic/Brain";
+
+import "./App.css";
 
 export default class App extends React.Component {
   game: Game;
@@ -18,7 +19,7 @@ export default class App extends React.Component {
       rows: 25,
       columns: 50,
       snakes: 15,
-      speed: 200,
+      speed: 10,
       snakeLength: 4,
       scoreService: new AlignedDirectionScoreService(),
       brainType: CloseObstaclesAndFruitVectorBrain
@@ -30,15 +31,25 @@ export default class App extends React.Component {
     this.evolver.run();
   }
 
+  speedChangeHandler = (speed: number) => {
+    this.game.setSpeed(speed);
+  }
+
+  fastForwardHandler = (fastForward: boolean, speed: number | undefined) => {
+    const newSpeed = fastForward ? Infinity : speed;
+    this.game.setSpeed(newSpeed);
+  }
+
   render() {
     return (
       <div id="app">
         <h1>Snake Evolver</h1>
         <EvolutionPlot evolver={this.evolver} />
         <div className="game-container">
-          <Slider
-            defaultValue={this.game.props.speed}
-            onChange={(event, value) => this.game.setSpeed(value)}
+          <SpeedControl
+            defaultSpeed={this.game.props.speed}
+            onSpeedChange={this.speedChangeHandler}
+            onFastForwardToggle={this.fastForwardHandler}
           />
           <GameCanvas width={1000} height={500} game={this.game} />
         </div>

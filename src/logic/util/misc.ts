@@ -28,3 +28,12 @@ export function multiply(arr1: number[], arr2: number[]): number[] | undefined {
   if (arr1.length !== arr2.length) return;
   return arr1.map((value, index) => value * arr2[index]);
 }
+
+// Execute a function and measure the elapsed time in milliseconds
+export function timeIt<T>(f: () => T): [T, number] {
+  const start = new Date().getTime();
+  const result = f();
+  const end = new Date().getTime();
+  const elapsed = end - start;
+  return [result, elapsed];
+}
