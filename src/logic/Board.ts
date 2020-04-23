@@ -30,7 +30,9 @@ export default class Board {
     );
   }
 
-  get([row, col]: Position): Node | undefined {
+  get(position?: Position): Node | undefined {
+    if(!position) return undefined;
+    const [row, col] = position;
     return this.grid[row]?.[col];
   }
 

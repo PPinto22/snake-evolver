@@ -52,9 +52,9 @@ export default class Evolver {
   defaultParams(): Parameters {
     return {
       popsize: this.game.props.snakes,
-      elitism: Math.round(0.2 * this.game.props.snakes),
-      mutationRate: 0.4,
-      mutationAmount: 3,
+      elitism: Math.round(0.15 * this.game.props.snakes),
+      mutationRate: 0.5,
+      mutationAmount: 2,
       fitnessPopulation: true,
       // network: this.createNetwork()
     };
@@ -64,7 +64,7 @@ export default class Evolver {
   createNetwork(): any {
     return new neatap.architect.Perceptron(
       this.brainType.inputSize, // inputs
-      10, // Neurons in hidden layer 1
+      5, // Neurons in hidden layer 1
       this.brainType.outputSize // outputs
     )
   }
@@ -95,14 +95,9 @@ export default class Evolver {
     this.state = "running";
     while (this.state === "running") {
       this.generation += 1;
-      console.debug(`Starting generation ${this.generation}`);
       this.callbacks.preGen.forEach(f => f());
       await this.neat.evolve();
       this.callbacks.postGen.forEach(f => f());
-      console.debug(`Finished generation ${this.generation}`);
-      const scores = this.game.snakes.map(snake => snake.score);
-      const max = Math.max(...scores);
-      console.debug(`Score: ${max}`);
       this.game.reset();
     }
   }

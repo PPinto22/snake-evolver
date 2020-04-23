@@ -1,7 +1,7 @@
 import Board from "./Board";
 import Snake from "./Snake";
 import { Direction, Position } from "./util/types";
-import { sleep, timeIt } from "./util/misc";
+import { sleep, time } from "./util/misc";
 import ScoreService, { DefaultScoreService } from "./ScoreService";
 import Brain, { DefaultBrain } from "./Brain";
 
@@ -41,24 +41,23 @@ export default class Game {
     snakeLength: 4,
     speed: 10,
     scoreService: new DefaultScoreService(),
-    brainType: DefaultBrain
+    brainType: DefaultBrain,
   };
 
   constructor(props?: Partial<GameProps>) {
     this.props = { ...Game.defaultProps, ...props };
     this.callbacks = {
       onMove: [],
-      onEnd: []
+      onEnd: [],
     };
 
-    // TODO: Walls
     this.board = new Board(this.props.rows, this.props.columns);
     this.initSnakes(); // initializes this.snakes
 
     this.iteration = 0;
     this.state = "stopped";
 
-    this.timeOut = 2 * (this.props.rows + this.props.columns);
+    this.timeOut = 5 * (this.props.rows + this.props.columns);
     this.setSpeed(this.props.speed, false);
     this.sleepTime = this.props.speed ? 1000 / this.props.speed : 0;
   }
@@ -79,9 +78,9 @@ export default class Game {
       return this.createSnake(i, i);
     });
     // Add snakes to the board
-    this.snakes.forEach(snake => this.board.addSnake(snake));
+    this.snakes.forEach((snake) => this.board.addSnake(snake));
     // Generate fruits for each snake
-    this.snakes.forEach(snake => (snake.fruit = this.board.addFruit(snake)));
+    this.snakes.forEach((snake) => (snake.fruit = this.board.addFruit(snake)));
     // Add a neural network to each snake
     if (this.props.neuralNetworks) this.setBrains(this.props.neuralNetworks);
   }
@@ -104,7 +103,7 @@ export default class Game {
     while (this.state !== "ended") {
       while (this.state === "stopped") await sleep(400);
 
-      const [, elapsedTime] = timeIt(moveFunction);
+      const [, elapsedTime] = time(moveFunction);
       // Wait some time between iterations according to the game speed
       // If the game is running at max speed (fps=Infinity; sleepTime=0), sleep every 50 iterations (ad hoc)
       // so as not to completely block the main thread
@@ -126,11 +125,11 @@ export default class Game {
 
     this.iteration++;
     this.snakes.forEach(this.moveSnake.bind(this));
-    this.callbacks.onMove.forEach(f => f());
+    this.callbacks.onMove.forEach((f) => f());
 
-    if (this.snakes.every(snake => !snake.alive)) {
+    if (this.snakes.every((snake) => !snake.alive)) {
       this.state = "ended";
-      this.callbacks.onEnd.forEach(f => f());
+      this.callbacks.onEnd.forEach((f) => f());
     }
   }
 
@@ -194,7 +193,7 @@ export default class Game {
       this.board.get(position)!.hasObstacle(snake) || // Position is an obstacle
       (!ateFruit && snake.timeoutCounter >= this.timeOut) // Hit the limit of moves without eating a fruit
     ) {
-      snake.alive = false;
+      this.killSnake(snake);
       return;
     }
 
@@ -219,5 +218,13 @@ export default class Game {
     }
     // Update snake score
     snake.score += this.props.scoreService.getMoveScore(this.board, snake, { position, ateFruit });
+  }
+
+  private killSnake(snake: Snake) {
+    snake.alive = false;
+    snake.positions.forEach((position) => {
+      this.board.get(position)?.snakes.delete(snake);
+    });
+    this.board.get(snake.fruit)?.fruits.delete(snake);
   }
 }

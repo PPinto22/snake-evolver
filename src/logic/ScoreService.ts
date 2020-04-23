@@ -18,7 +18,7 @@ export default interface ScoreService {
 // Otherwise: award or penalize points if the snake is moving towards the fruit or opposite from it
 export class AlignedDirectionScoreService implements ScoreService {
   SCORES = {
-    FRUIT: 50,
+    FRUIT: 100,
     MOVE_TOWARDS_FRUIT: 1,
     MOVE_AGAINST_FRUIT: -1
   };

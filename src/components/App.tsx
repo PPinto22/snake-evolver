@@ -15,14 +15,17 @@ export default class App extends React.Component {
 
   constructor(props: {}) {
     super(props);
+    this.state = {
+      width: 1000,
+    };
     this.game = new Game({
       rows: 25,
       columns: 50,
-      snakes: 15,
+      snakes: 75,
       speed: 10,
       snakeLength: 4,
       scoreService: new AlignedDirectionScoreService(),
-      brainType: CloseObstaclesAndFruitVectorBrain
+      brainType: CloseObstaclesAndFruitVectorBrain,
     });
     this.evolver = new Evolver(this.game);
   }
@@ -33,25 +36,27 @@ export default class App extends React.Component {
 
   speedChangeHandler = (speed: number) => {
     this.game.setSpeed(speed);
-  }
+  };
 
   fastForwardHandler = (fastForward: boolean, speed: number | undefined) => {
     const newSpeed = fastForward ? Infinity : speed;
     this.game.setSpeed(newSpeed);
-  }
+  };
 
   render() {
     return (
       <div id="app">
         <h1>Snake Evolver</h1>
-        <EvolutionPlot evolver={this.evolver} />
-        <div className="game-container">
-          <SpeedControl
-            defaultSpeed={this.game.props.speed}
-            onSpeedChange={this.speedChangeHandler}
-            onFastForwardToggle={this.fastForwardHandler}
-          />
-          <GameCanvas width={1000} height={500} game={this.game} />
+        <div id="main">
+          <EvolutionPlot evolver={this.evolver} />
+          <div className="game-container">
+            <SpeedControl
+              defaultSpeed={this.game.props.speed}
+              onSpeedChange={this.speedChangeHandler}
+              onFastForwardToggle={this.fastForwardHandler}
+            />
+            <GameCanvas width={1000} height={500} game={this.game} />
+          </div>
         </div>
       </div>
     );

@@ -7,7 +7,7 @@ import {
   directions,
   positionDiff,
   rotateAxis,
-  vectorAngle
+  vectorAngle,
 } from "./util/geometry";
 
 export default abstract class Brain {
@@ -16,7 +16,7 @@ export default abstract class Brain {
   network: any;
 
   // Constants
-  static inputSize = NaN; // Number of inputs. NOTE: Should be ABSTRACT; must be OVERRIDDEN!
+  static inputSize = NaN; // Number of inputs. NOTE: Must be overriden!
   static outputSize = 3; // Number of outputs. 0: forward; 1: left; 2: right
 
   constructor(snake: Snake, network: any, board: Board) {
@@ -41,18 +41,17 @@ export default abstract class Brain {
     this.network.clear();
     const inputs = this.getInputs();
     const outputs: [number, number, number] = this.network.activate(inputs);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [index, value] = max(outputs)!;
-    switch(index) {
+    const [index] = max(outputs)!;
+    switch (index) {
       case 0:
         // Keep going forward
-        break
+        break;
       case 1:
-        this.snake.direction = directions.leftOf(this.snake.direction)
-        break
+        this.snake.direction = directions.leftOf(this.snake.direction);
+        break;
       case 2:
-        this.snake.direction = directions.rightOf(this.snake.direction)
-        break
+        this.snake.direction = directions.rightOf(this.snake.direction);
+        break;
     }
   }
 
@@ -112,7 +111,7 @@ export class DistancesAndFruitAngleBrain extends Brain {
       this.distanceToObstacle(Board.getVector(directions.leftOf(this.snake.direction))),
       this.distanceToObstacle(Board.getVector(directions.rightOf(this.snake.direction))),
       this.distanceToFruit(),
-      this.fruitAngle()
+      this.fruitAngle(),
     ];
   }
 }
@@ -121,32 +120,31 @@ export class CloseObstaclesAndFruitVectorBrain extends Brain {
   static inputSize = 5;
   maxDistance: number;
 
-  constructor(...args: [Snake, any, Board]){
+  constructor(...args: [Snake, any, Board]) {
     super(...args);
     this.maxDistance = Math.max(this.board.columns, this.board.rows);
   }
 
-  // Return 1 in the immediate vicinity;
-  // 0.5 if there is an obstacle at distance = 2;
-  // 0 otherwise
-  closeDistanceToObstacle(direction: Vector): number {
+  // Close obstacle -> ~1
+  // Distant obstacle -> ~0
+  inverseDistanceToObstacle(direction: Vector): number {
     const dist = this.distanceToObstacle(direction);
-    return dist > 2 ? 0 : 1 / dist;
+    return 1 / dist;
   }
 
-  // 1. obstacle forward? 1/0.5/0
-  // 2. obstacle to the left? 1/0.5/0
-  // 3. obstacle to the right? 1/0.5/0
+  // 1. obstacle forward?
+  // 2. obstacle to the left?
+  // 3. obstacle to the right?
   // 4. distance to fruit forward (+) or backward (-)
   // 5. distance to fruit to the left (+) or right (-)
   getInputs(): number[] {
     const fruitPosition: Position = this.relativeFruitPosition() || [NaN, NaN];
     return [
-      this.closeDistanceToObstacle(Board.getVector(this.snake.direction)),
-      this.closeDistanceToObstacle(Board.getVector(directions.leftOf(this.snake.direction))),
-      this.closeDistanceToObstacle(Board.getVector(directions.rightOf(this.snake.direction))),
+      this.inverseDistanceToObstacle(Board.getVector(this.snake.direction)),
+      this.inverseDistanceToObstacle(Board.getVector(directions.leftOf(this.snake.direction))),
+      this.inverseDistanceToObstacle(Board.getVector(directions.rightOf(this.snake.direction))),
       fruitPosition[0] / this.maxDistance,
-      fruitPosition[1] / this.maxDistance
+      fruitPosition[1] / this.maxDistance,
     ];
   }
 }

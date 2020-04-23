@@ -6,7 +6,7 @@ export function choice<T>(s: Array<T>): T | undefined {
 }
 
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Returns a pair [index, value] of the max element in an array
@@ -30,7 +30,7 @@ export function multiply(arr1: number[], arr2: number[]): number[] | undefined {
 }
 
 // Execute a function and measure the elapsed time in milliseconds
-export function timeIt<T>(f: () => T): [T, number] {
+export function time<T>(f: () => T): [T, number] {
   const start = new Date().getTime();
   const result = f();
   const end = new Date().getTime();

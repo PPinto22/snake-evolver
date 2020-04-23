@@ -14,14 +14,19 @@ interface State {
   fastForward: boolean;
 }
 
-export default class SpeedControl extends Component<Props> {
-  readonly state = { fastForward: false };
-  speed: number | undefined;
+export default class SpeedControl extends Component<Props, State> {
+  speed: number;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = { fastForward: false };
+    this.speed = props.defaultSpeed || 0;
+  }
 
   toggleFastForward = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fastForward = event.target.checked;
-    this.setState({ fastForward: fastForward });
     this.props.onFastForwardToggle?.(fastForward, this.speed);
+    this.setState({ fastForward: fastForward });
   };
 
   sliderHandler = (_event: React.ChangeEvent<{}>, value: number | number[]) => {

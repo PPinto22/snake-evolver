@@ -1,13 +1,12 @@
 import React from "react";
 import Evolver from "../logic/Evolver";
-import Plotly, { Data, Layout } from "plotly.js";
+import Plotly, { Data, Layout, Config } from "plotly.js";
 import createPlotlyComponent from "react-plotly.js/factory";
 
 const Plot = createPlotlyComponent(Plotly);
 
 interface Props {
   evolver: Evolver;
-  maxGens: number;
 }
 
 interface State {
@@ -29,10 +28,6 @@ export default class EvolutionPlot extends React.Component<Props, State> {
     };
   }
 
-  static defaultProps = {
-    maxGens: 10
-  };
-
   private postGen = () => {
     const scores = this.evolver.game.snakes.map(snake => snake.score);
     const avg = scores.reduce((sum, score) => sum + score, 0) / scores.length;
@@ -42,7 +37,7 @@ export default class EvolutionPlot extends React.Component<Props, State> {
       max: [...this.state.max, max],
       avg: [...this.state.avg, avg]
     });
-  }
+  };
 
   componentDidMount() {
     this.evolver.addCallback("postGen", this.postGen);
@@ -53,20 +48,28 @@ export default class EvolutionPlot extends React.Component<Props, State> {
   }
 
   render() {
-    let data: Data[] = [
+    const data: Data[] = [
       {
         type: "scatter",
         x: this.state.generations,
         y: this.state.max
       }
     ];
-    let layout: Partial<Layout> = {
-      xaxis: { title: "Generation" },
-      yaxis: { title: "Fitness" }
+    const layout: Partial<Layout> = {
+      xaxis: { title: "Generation", fixedrange: true, rangemode: "nonnegative" },
+      yaxis: { title: "Fitness", fixedrange: true, rangemode: "nonnegative" },
+      margin: {
+        l: 50,
+        r: 50,
+        b: 50,
+        t: 50,
+        pad: 4
+      }
+    };
+    const config: Partial<Config> = {
+      displayModeBar: false
     };
 
-    return (
-      <Plot className="evolution-plot" data={data} layout={layout} />
-    );
+    return <Plot className="evolution-plot" data={data} layout={layout} config={config} />;
   }
 }
