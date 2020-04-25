@@ -1,5 +1,6 @@
 import React from "react";
 import Game from "../logic/Game";
+import Node from "../logic/Node";
 import Snake from "../logic/Snake";
 import { hex2rgba, traceDiamond } from "./util/canvas";
 
@@ -7,6 +8,7 @@ interface Props {
   game: Game;
   width: number; // canvas width (px)
   height: number; // canvas height (px)
+  snakes?: number; // snakes to display (undefined = all snakes)
 }
 
 export default class GameCanvas extends React.Component<Props, {}> {
@@ -30,6 +32,7 @@ export default class GameCanvas extends React.Component<Props, {}> {
   display() {
     let ctx = this.ctx!;
     ctx.clearRect(0, 0, this.props.width, this.props.height);
+
     if (this.game.props.speed === Infinity) {
       this.displayFastForward();
     } else {
@@ -55,8 +58,10 @@ export default class GameCanvas extends React.Component<Props, {}> {
 
   displayGame() {
     this.displayGrid();
-    this.game.snakes.filter((snake) => snake.alive).forEach(this.displaySnake.bind(this));
-    this.game.snakes.filter((snake) => snake.alive).forEach(this.displayFruit.bind(this));
+    this.game.visibleSnakes.forEach((snake) => {
+      this.displaySnake(snake);
+      this.displayFruit(snake);
+    });
   }
 
   displayFruit(snake: Snake) {
@@ -65,7 +70,8 @@ export default class GameCanvas extends React.Component<Props, {}> {
     let ctx = this.ctx!;
 
     ctx.save();
-    const opacity = this.game.board.get([row, col])!.fruits.size > 1 ? 0.4 : 1;
+    // const opacity = this.game.board.get([row, col])!.fruits.size > 1 ? 0.4 : 1;
+    const opacity = this.positionHasOverlap(this.game.board.get([row, col])!) ? 0.4 : 1;
     ctx.fillStyle = hex2rgba(snake.color, opacity);
     traceDiamond(ctx, col * this.unitWidth, row * this.unitWidth, this.unitWidth, this.unitHeight);
     ctx.fill();
@@ -93,7 +99,8 @@ export default class GameCanvas extends React.Component<Props, {}> {
         ctx.rect(col * this.unitWidth, row * this.unitHeight, this.unitWidth, this.unitHeight);
         ctx.closePath();
       }
-      const opacity = this.game.board.get([row, col])!.snakes.size > 1 ? 0.4 : 1;
+      // const opacity = this.game.board.get([row, col])!.snakes.size > 1 ? 0.4 : 1;
+      const opacity = this.positionHasOverlap(this.game.board.get([row, col])!) ? 0.4 : 1;
       ctx.fillStyle = hex2rgba(snake.color, opacity);
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = 2;
@@ -120,6 +127,20 @@ export default class GameCanvas extends React.Component<Props, {}> {
     ctx.strokeStyle = "rgba(180, 180, 180, 0.4)";
     ctx.stroke();
     ctx.restore();
+  }
+
+  // Returns true if there is more than one snake or fruit in the same position; false otherwise
+  private positionHasOverlap(node: Node) {
+    if (node.snakes.size < 2 && node.fruits.size < 2) return false;
+    let objects = 0;
+    for (let i = 0; i < this.game.visibleSnakes.length; i++) {
+      const snake = this.game.visibleSnakes[i];
+      if (node.snakes.has(snake)) objects++;
+      if (node.fruits.has(snake)) objects++;
+
+      if (objects > 1) return true;
+    }
+    return false;
   }
 
   componentDidMount() {

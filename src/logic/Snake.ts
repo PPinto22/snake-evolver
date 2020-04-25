@@ -1,4 +1,4 @@
-import { Direction, Position } from "./util/types";
+import { Direction, Position, positionToStr, PositionStr } from "./util/types";
 import Board from "./Board";
 import Brain from "./Brain";
 
@@ -13,8 +13,10 @@ export default class Snake {
   // Scores and state
   score: number; // Points (fitness)
   fruits: number; // Nr. of fruits eaten
-  timeoutCounter: number; // Number of moves without eating a fruit
   alive: boolean;
+  // Past positions of the head and respective count. Resets when a fruit is eaten. Useful to prevent infinite loops.
+  // E.g. "(5, 10)" -> 1, meaning the snake has been at position (5, 10) 1 time.
+  history: Map<PositionStr, number>;
   // Neural network
   brain?: Brain;
 
@@ -26,7 +28,7 @@ export default class Snake {
     this.fruit = fruit;
     this.fruits = 0;
     this.score = 0;
-    this.timeoutCounter = 0;
+    this.history = new Map();
     this.alive = true;
   }
 
@@ -64,6 +66,23 @@ export default class Snake {
       throw new Error("Cannot move further than one unit");
     }
     this.positions.push([row, col]);
+    this.addHistory([row, col]);
+  }
+
+  addHistory(position: Position) {
+    const positionStr = positionToStr(position);
+    const previousCount = this.history.get(positionStr) || 0;
+    this.history.set(positionStr, previousCount + 1);
+  }
+
+  getHistoryCount(position: Position): number {
+    return this.history.get(positionToStr(position)) || 0;
+  }
+
+  eatFruit(newFruit?: Position) {
+    this.fruit = newFruit;
+    this.fruits += 1;
+    this.history.clear();
   }
 
   generateColor(): string {
@@ -76,7 +95,7 @@ export default class Snake {
 
     // generates a "random" color for this object (e.g., #56eec7)
     // https://dev.to/akhil_001/generating-random-color-with-single-line-of-js-code-fhj
-    const randomColor = "#" + Math.floor(random(this.id + 1) * 16777215).toString(16);
+    const randomColor = "#" + Math.floor(random(this.id + 3) * 16777215).toString(16);
     return randomColor;
   }
 }

@@ -1,13 +1,8 @@
 import Board from "./Board";
 import Snake from "./Snake";
-import { Position } from "./util/types";
+import { Move } from "./util/types";
 import { positionDiff } from "./util/geometry";
 import { multiply } from "./util/misc";
-
-interface Move {
-  position: Position; // Where the snake went
-  ateFruit: boolean; // Whether the snake ate a fruit
-}
 
 export default interface ScoreService {
   // Evaluate how good the snake's last move was
@@ -20,7 +15,7 @@ export class AlignedDirectionScoreService implements ScoreService {
   SCORES = {
     FRUIT: 100,
     MOVE_TOWARDS_FRUIT: 1,
-    MOVE_AGAINST_FRUIT: -1
+    MOVE_AGAINST_FRUIT: -1,
   };
 
   getMoveScore(board: Board, snake: Snake, { position, ateFruit }: Move): number {
@@ -29,7 +24,7 @@ export class AlignedDirectionScoreService implements ScoreService {
 
     const fruitVector = positionDiff(position, snake.fruit);
     const movementVector = Board.getVector(snake.direction);
-    const rightWay = multiply(fruitVector, movementVector)!.every(value => value >= 0);
+    const rightWay = multiply(fruitVector, movementVector)!.every((value) => value >= 0);
 
     return rightWay ? this.SCORES.MOVE_TOWARDS_FRUIT : this.SCORES.MOVE_AGAINST_FRUIT;
   }

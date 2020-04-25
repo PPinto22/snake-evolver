@@ -4,24 +4,29 @@ import Game from "../logic/Game";
 import Evolver from "../logic/Evolver";
 import { AlignedDirectionScoreService } from "../logic/ScoreService";
 import EvolutionPlot from "./EvolutionPlot";
-import SpeedControl from "./SpeedControl";
+import Controls from "./Controls";
 import { CloseObstaclesAndFruitVectorBrain } from "../logic/Brain";
 
 import "./App.css";
 
-export default class App extends React.Component {
+interface State {
+  snakes: number;
+}
+
+export default class App extends React.Component<{}, State> {
   game: Game;
   evolver: Evolver;
 
   constructor(props: {}) {
     super(props);
     this.state = {
-      width: 1000,
+      snakes: 20,
     };
     this.game = new Game({
       rows: 25,
       columns: 50,
-      snakes: 75,
+      snakes: 20,
+      visibleSnakes: this.state.snakes,
       speed: 10,
       snakeLength: 4,
       scoreService: new AlignedDirectionScoreService(),
@@ -43,6 +48,11 @@ export default class App extends React.Component {
     this.game.setSpeed(newSpeed);
   };
 
+  snakeSelectHandler = (snakes: number) => {
+    this.game.setVisibleSnakes(snakes);
+    this.setState({ snakes: snakes });
+  };
+
   render() {
     return (
       <div id="app">
@@ -50,12 +60,14 @@ export default class App extends React.Component {
         <div id="main">
           <EvolutionPlot evolver={this.evolver} />
           <div className="game-container">
-            <SpeedControl
+            <Controls
               defaultSpeed={this.game.props.speed}
+              defaultSnakes={this.state.snakes}
               onSpeedChange={this.speedChangeHandler}
               onFastForwardToggle={this.fastForwardHandler}
+              onSnakeSelect={this.snakeSelectHandler}
             />
-            <GameCanvas width={1000} height={500} game={this.game} />
+            <GameCanvas width={1000} height={500} game={this.game} snakes={this.state.snakes} />
           </div>
         </div>
       </div>

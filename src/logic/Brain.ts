@@ -129,7 +129,7 @@ export class CloseObstaclesAndFruitVectorBrain extends Brain {
   // Distant obstacle -> ~0
   inverseDistanceToObstacle(direction: Vector): number {
     const dist = this.distanceToObstacle(direction);
-    return 1 / dist;
+    return 1 / (dist ** 2);
   }
 
   // 1. obstacle forward?

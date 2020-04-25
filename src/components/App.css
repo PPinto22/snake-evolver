@@ -14,14 +14,19 @@
   image-rendering: crisp-edges;
 }
 
-.speed-control {
+.controls {
   font-size: 20px;
 }
 
-.speed-control .speed-slider {
+.controls .speed-slider {
   width: 150px;
   margin-left: 15px;
   margin-right: 20px;
+}
+
+.controls .snake-select {
+  width: 70px;
+  margin-left: 10px;
 }
 
 .evolution-plot {

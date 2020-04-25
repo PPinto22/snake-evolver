@@ -1,6 +1,6 @@
 import Board from "./Board";
 import Snake from "./Snake";
-import { Direction, Position } from "./util/types";
+import { Direction, Position, Move } from "./util/types";
 import { sleep, time } from "./util/misc";
 import ScoreService, { DefaultScoreService } from "./ScoreService";
 import Brain, { DefaultBrain } from "./Brain";
@@ -12,6 +12,7 @@ export interface GameProps {
   rows: number;
   columns: number;
   snakes: number;
+  visibleSnakes: number;
   snakeLength: number;
   speed: number;
   scoreService: ScoreService;
@@ -29,8 +30,8 @@ export default class Game {
   callbacks: Callbacks; // Functions to execute at certain events
   board: Board;
   snakes!: Snake[];
+  visibleSnakes!: Snake[];
   state: State;
-  timeOut: number; // Kill snakes after 'timeOut' moves without having eaten a fruit
   iteration: number; // Current move iteration
   sleepTime: number; // Number of milliseconds to sleep between moves (1000/speed)
 
@@ -38,6 +39,7 @@ export default class Game {
     rows: 25,
     columns: 50,
     snakes: 20,
+    visibleSnakes: 20,
     snakeLength: 4,
     speed: 10,
     scoreService: new DefaultScoreService(),
@@ -53,13 +55,24 @@ export default class Game {
 
     this.board = new Board(this.props.rows, this.props.columns);
     this.initSnakes(); // initializes this.snakes
+    this.updateVisibleSnakes(); // initializes this.visibleSnakes
 
     this.iteration = 0;
     this.state = "stopped";
 
-    this.timeOut = 5 * (this.props.rows + this.props.columns);
     this.setSpeed(this.props.speed, false);
     this.sleepTime = this.props.speed ? 1000 / this.props.speed : 0;
+  }
+
+  setVisibleSnakes(visibleSnakes: number) {
+    this.props.visibleSnakes = visibleSnakes;
+    this.updateVisibleSnakes();
+  }
+
+  updateVisibleSnakes() {
+    this.visibleSnakes = this.snakes
+      .slice(0, this.props.visibleSnakes)
+      .filter((snake) => snake.alive);
   }
 
   setSpeed(fps: number = Infinity, updateState: boolean = true) {
@@ -104,10 +117,11 @@ export default class Game {
       while (this.state === "stopped") await sleep(400);
 
       const [, elapsedTime] = time(moveFunction);
+
       // Wait some time between iterations according to the game speed
-      // If the game is running at max speed (fps=Infinity; sleepTime=0), sleep every 50 iterations (ad hoc)
+      // If the game is running at max speed (fps=Infinity; sleepTime=0), sleep every 75 iterations (ad hoc)
       // so as not to completely block the main thread
-      if (this.sleepTime !== 0 || this.iteration % 50 === 0)
+      if ((this.visibleSnakes.length && this.sleepTime !== 0) || this.iteration % 75 === 0)
         await sleep(Math.max(this.sleepTime - elapsedTime, 0));
     }
   }
@@ -133,7 +147,7 @@ export default class Game {
     }
   }
 
-  // Create a snake placed along the perimeter of the board (with an optional $margin)
+  // Create a snake placed along the perimeter of the board (with an optional margin)
   private createSnake(index: number, id: number, margin = 2): Snake {
     const [width, height] = [this.props.columns - 2 * margin, this.props.rows - 2 * margin];
     const perimeter = width * 2 + height * 2 - 4;
@@ -170,7 +184,7 @@ export default class Game {
       return [[position[0] + margin, position[1] + margin], direction];
     }
 
-    const startDistance = Math.floor((index * perimeter) / this.props.snakes);
+    const startDistance = Math.floor((index * perimeter) / this.props.visibleSnakes);
     let direction: Direction = "right";
     let positions = [];
     for (let i = 0; i < this.props.snakeLength; i++) {
@@ -182,17 +196,22 @@ export default class Game {
     return new Snake(id, positions, direction);
   }
 
+  private shouldKillSnake(snake: Snake, move: Move) {
+    return (
+      this.board.outOfBounds(move.position) || // Position out of bounds of the board
+      this.board.get(move.position)!.hasObstacle(snake) || // Position is an obstacle
+      snake.getHistoryCount(move.position) > 2 // Snake has been in the same position more than two times
+    );
+  }
+
   private moveSnake(snake: Snake) {
     if (!snake.alive) return; // Snake is already dead (should never happen)
     // Activate the neural network and get the next position
     const position = snake.think().getNextPosition();
     const ateFruit = !!this.board.get(position)?.fruits.has(snake);
+    const move = {position, ateFruit};
     // Snake kill conditions
-    if (
-      this.board.outOfBounds(position) || // Position out of bounds of the board
-      this.board.get(position)!.hasObstacle(snake) || // Position is an obstacle
-      (!ateFruit && snake.timeoutCounter >= this.timeOut) // Hit the limit of moves without eating a fruit
-    ) {
+    if (this.shouldKillSnake(snake, move)) {
       this.killSnake(snake);
       return;
     }
@@ -200,18 +219,14 @@ export default class Game {
     if (ateFruit) {
       // Snake ate a fruit
       snake.extendTo(position); // Move and grow the snake
-      snake.fruit = this.board.addFruit(snake); // Generate a new fruit
-      // Update counters
-      snake.fruits += 1;
-      snake.timeoutCounter = 0;
+      const newFruit = this.board.addFruit(snake); // Generate a new fruit
+      snake.eatFruit(newFruit); // Update counters and set the new fruit
       // Update the board
       this.board.addSnakePosition(snake, position);
       this.board.deleteFruit(snake, position);
     } else {
       // No fruit
       const oldTail = snake.moveTo(position); // Move the snake
-      // Update counters
-      snake.timeoutCounter += 1;
       // Update the board
       this.board.addSnakePosition(snake, position);
       this.board.removeSnakePosition(snake, oldTail);
@@ -226,5 +241,6 @@ export default class Game {
       this.board.get(position)?.snakes.delete(snake);
     });
     this.board.get(snake.fruit)?.fruits.delete(snake);
+    this.updateVisibleSnakes();
   }
 }
