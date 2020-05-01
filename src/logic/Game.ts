@@ -29,10 +29,11 @@ export default class Game {
   props: GameProps;
   callbacks: Callbacks; // Functions to execute at certain events
   board: Board;
-  snakes!: Snake[];
-  visibleSnakes!: Snake[];
+  snakes!: Snake[]; // Complete list of all snakes
+  aliveSnakes!: Snake[]; // Sublist of snakes containing only those that are still in-game
+  visibleSnakes!: Snake[]; // Sublist of snakes containing only those that are visible to the user
   state: State;
-  iteration: number; // Current move iteration
+  iteration: number; // Current iteration. An iteration consists in moving every snake 1 unit
   sleepTime: number; // Number of milliseconds to sleep between moves (1000/speed)
 
   static defaultProps: GameProps = {
@@ -54,8 +55,7 @@ export default class Game {
     };
 
     this.board = new Board(this.props.rows, this.props.columns);
-    this.initSnakes(); // initializes this.snakes
-    this.updateVisibleSnakes(); // initializes this.visibleSnakes
+    this.initSnakes(); // initializes this.snakes, this.aliveSnakes and this.visibleSnakes
 
     this.iteration = 0;
     this.state = "stopped";
@@ -96,6 +96,9 @@ export default class Game {
     this.snakes.forEach((snake) => (snake.fruit = this.board.addFruit(snake)));
     // Add a neural network to each snake
     if (this.props.neuralNetworks) this.setBrains(this.props.neuralNetworks);
+
+    this.updateVisibleSnakes();
+    this.aliveSnakes = [...this.snakes];
   }
 
   // Set a neural network for each snake
@@ -119,9 +122,9 @@ export default class Game {
       const [, elapsedTime] = time(moveFunction);
 
       // Wait some time between iterations according to the game speed
-      // If the game is running at max speed (fps=Infinity; sleepTime=0), sleep every 75 iterations (ad hoc)
+      // If the game is running at max speed (fps=Infinity; sleepTime=0), sleep every 50 iterations (ad hoc)
       // so as not to completely block the main thread
-      if ((this.visibleSnakes.length && this.sleepTime !== 0) || this.iteration % 75 === 0)
+      if ((this.visibleSnakes.length && this.sleepTime !== 0) || this.iteration % 50 === 0)
         await sleep(Math.max(this.sleepTime - elapsedTime, 0));
     }
   }
@@ -138,10 +141,10 @@ export default class Game {
     if (this.state !== "running") return;
 
     this.iteration++;
-    this.snakes.forEach(this.moveSnake.bind(this));
+    this.aliveSnakes.forEach(this.moveSnake);
     this.callbacks.onMove.forEach((f) => f());
 
-    if (this.snakes.every((snake) => !snake.alive)) {
+    if (!this.aliveSnakes.length) {
       this.state = "ended";
       this.callbacks.onEnd.forEach((f) => f());
     }
@@ -204,12 +207,12 @@ export default class Game {
     );
   }
 
-  private moveSnake(snake: Snake) {
+  moveSnake = (snake: Snake) => {
     if (!snake.alive) return; // Snake is already dead (should never happen)
     // Activate the neural network and get the next position
     const position = snake.think().getNextPosition();
     const ateFruit = !!this.board.get(position)?.fruits.has(snake);
-    const move = {position, ateFruit};
+    const move = { position, ateFruit };
     // Snake kill conditions
     if (this.shouldKillSnake(snake, move)) {
       this.killSnake(snake);
@@ -233,7 +236,7 @@ export default class Game {
     }
     // Update snake score
     snake.score += this.props.scoreService.getMoveScore(this.board, snake, { position, ateFruit });
-  }
+  };
 
   private killSnake(snake: Snake) {
     snake.alive = false;
@@ -241,6 +244,8 @@ export default class Game {
       this.board.get(position)?.snakes.delete(snake);
     });
     this.board.get(snake.fruit)?.fruits.delete(snake);
+
+    this.aliveSnakes = this.aliveSnakes.filter((aSnake) => aSnake !== snake);
     this.updateVisibleSnakes();
   }
 }

@@ -4,6 +4,7 @@ import Game from "../logic/Game";
 import Evolver from "../logic/Evolver";
 import { AlignedDirectionScoreService } from "../logic/ScoreService";
 import EvolutionPlot from "./EvolutionPlot";
+import StatCards from "./StatCards";
 import Controls from "./Controls";
 import { CloseObstaclesAndFruitVectorBrain } from "../logic/Brain";
 
@@ -20,14 +21,14 @@ export default class App extends React.Component<{}, State> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      snakes: 20,
+      snakes: Controls.defaults.snakes,
     };
     this.game = new Game({
-      rows: 25,
-      columns: 50,
-      snakes: 20,
-      visibleSnakes: this.state.snakes,
-      speed: 10,
+      rows: 20,
+      columns: 40,
+      snakes: 50,
+      visibleSnakes: Controls.defaults.snakes,
+      speed: Controls.defaults.speed,
       snakeLength: 4,
       scoreService: new AlignedDirectionScoreService(),
       brainType: CloseObstaclesAndFruitVectorBrain,
@@ -58,11 +59,12 @@ export default class App extends React.Component<{}, State> {
       <div id="app">
         <h1>Snake Evolver</h1>
         <div id="main">
-          <EvolutionPlot evolver={this.evolver} />
-          <div className="game-container">
+          <div id="stats">
+            <StatCards evolver={this.evolver}/>
+            <EvolutionPlot evolver={this.evolver} />
+          </div>
+          <div id="game-container">
             <Controls
-              defaultSpeed={this.game.props.speed}
-              defaultSnakes={this.state.snakes}
               onSpeedChange={this.speedChangeHandler}
               onFastForwardToggle={this.fastForwardHandler}
               onSnakeSelect={this.snakeSelectHandler}

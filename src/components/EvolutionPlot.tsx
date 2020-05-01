@@ -12,7 +12,7 @@ interface Props {
 interface State {
   generations: number[];
   max: number[];
-  avg: number[];
+  // avg: number[];
 }
 
 export default class EvolutionPlot extends React.Component<Props, State> {
@@ -24,18 +24,18 @@ export default class EvolutionPlot extends React.Component<Props, State> {
     this.state = {
       generations: [],
       max: [],
-      avg: []
+      // avg: []
     };
   }
 
   private postGen = () => {
-    const scores = this.evolver.game.snakes.map(snake => snake.score);
-    const avg = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const scores = this.evolver.game.snakes.map(snake => snake.fruits);
+    // const avg = scores.reduce((sum, score) => sum + score, 0) / scores.length;
     const max = Math.max(...scores);
     this.setState({
       generations: [...this.state.generations, this.evolver.generation],
       max: [...this.state.max, max],
-      avg: [...this.state.avg, avg]
+      // avg: [...this.state.avg, avg]
     });
   };
 
@@ -57,12 +57,12 @@ export default class EvolutionPlot extends React.Component<Props, State> {
     ];
     const layout: Partial<Layout> = {
       xaxis: { title: "Generation", fixedrange: true, rangemode: "nonnegative" },
-      yaxis: { title: "Fitness", fixedrange: true, rangemode: "nonnegative" },
+      yaxis: { title: "Score", fixedrange: true, rangemode: "nonnegative" },
       margin: {
-        l: 50,
-        r: 50,
-        b: 50,
-        t: 50,
+        l: 40,
+        r: 20,
+        b: 40,
+        t: 20,
         pad: 4
       }
     };

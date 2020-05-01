@@ -9,13 +9,36 @@
   margin-right: auto;
 }
 
+#stats {
+  margin-bottom: 10px;
+  display: flex;
+}
+
+.stat-cards {
+  flex: 0 0 20%;
+  margin-top: -20px;
+  margin-right: 20px;
+  vertical-align: middle;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.stat-card {
+  width: 175px;
+}
+
+.evolution-plot {
+  flex: 1;
+  height: 275px;
+  margin-left: auto;
+  text-align: right;
+}
+
 .game {
   border: 1px solid;
   image-rendering: crisp-edges;
-}
-
-.controls {
-  font-size: 20px;
 }
 
 .controls .speed-slider {
@@ -29,8 +52,8 @@
   margin-left: 10px;
 }
 
-.evolution-plot {
-  width: 100%;
-  height: 275px;
-  margin-bottom: 10px;
+.MuiFormControlLabel-root .MuiFormControlLabel-label,
+.MuiFormControlLabel-root .MuiSelect-root,
+.MuiList-root .MuiListItem-root {
+  font-size: 1.4rem;
 }

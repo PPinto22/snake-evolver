@@ -7,11 +7,8 @@ import FormGroup from "@material-ui/core/FormGroup";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 // TODO increase font size
-// FIXME: A component is changing the default value of an uncontrolled SelectInput after being initialized. To suppress this warning opt to use a controlled SelectInput
 
 interface Props {
-  defaultSpeed?: number;
-  defaultSnakes?: number;
   onSpeedChange?: (speed: number) => void;
   onFastForwardToggle?: (fastForward: boolean, speed: number | undefined) => void;
   onSnakeSelect?: (value: number) => void;
@@ -22,12 +19,16 @@ interface State {
 }
 
 export default class Controls extends Component<Props, State> {
+  static defaults = {
+    speed: 10,
+    snakes: 20,
+  };
   speed: number;
 
   constructor(props: Props) {
     super(props);
     this.state = { fastForward: false };
-    this.speed = props.defaultSpeed || 0;
+    this.speed = Controls.defaults.speed;
   }
 
   toggleFastForward = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +55,7 @@ export default class Controls extends Component<Props, State> {
           return `${value}x`;
         }}
         valueLabelDisplay="auto"
-        defaultValue={this.props.defaultSpeed}
+        defaultValue={Controls.defaults.speed}
         min={0}
         max={100}
         onChange={this.sliderHandler}
@@ -72,7 +73,8 @@ export default class Controls extends Component<Props, State> {
       <Select
         className="snake-select"
         onChange={this.handleSnakeSelect}
-        defaultValue={this.props.defaultSnakes}
+        defaultValue={Controls.defaults.snakes}
+        disabled={this.state.fastForward}
       >
         <MenuItem value={1}>Top 1</MenuItem>
         <MenuItem value={3}>Top 3</MenuItem>
@@ -83,8 +85,8 @@ export default class Controls extends Component<Props, State> {
     );
     return (
       <FormGroup row className="controls">
-        <FormControlLabel label="Speed" control={speedSlider} labelPlacement="start" />
         <FormControlLabel label="Fast Forward" control={fastForwardSwitch} labelPlacement="start" />
+        <FormControlLabel label="Speed" control={speedSlider} labelPlacement="start" />
         <FormControlLabel label="Show" control={snakeVisibilitySelect} labelPlacement="start" />
       </FormGroup>
     );
