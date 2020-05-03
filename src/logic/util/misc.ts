@@ -23,6 +23,12 @@ export function max(arr: number[]): [number, number] | undefined {
   return [maxIndex, max];
 }
 
+export function sum(arr: number[]): number {
+  let sum = 0;
+  arr.forEach((num) => (sum += num));
+  return sum;
+}
+
 // Multiplies each value in arr1 with arr2
 export function multiply(arr1: number[], arr2: number[]): number[] | undefined {
   if (arr1.length !== arr2.length) return;

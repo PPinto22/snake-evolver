@@ -62,6 +62,7 @@ export default class GameCanvas extends React.Component<Props, {}> {
       this.displaySnake(snake);
       this.displayFruit(snake);
     });
+    this.displayWalls();
   }
 
   displayFruit(snake: Snake) {
@@ -126,6 +127,24 @@ export default class GameCanvas extends React.Component<Props, {}> {
     }
     ctx.strokeStyle = "rgba(180, 180, 180, 0.4)";
     ctx.stroke();
+    ctx.restore();
+  }
+
+  displayWalls() {
+    let ctx = this.ctx!;
+    ctx.save();
+    ctx.strokeStyle = "#000000";
+    ctx.fillStyle = "#ff0000";
+    ctx.lineWidth = 2;
+
+    this.props.game.board.walls.forEach((node) => {
+      const [row, col] = node.position;
+      ctx.beginPath();
+      ctx.rect(col * this.unitWidth, row * this.unitHeight, this.unitWidth, this.unitHeight);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    });
     ctx.restore();
   }
 

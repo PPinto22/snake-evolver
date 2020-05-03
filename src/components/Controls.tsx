@@ -6,12 +6,11 @@ import MenuItem from "@material-ui/core/MenuItem";
 import FormGroup from "@material-ui/core/FormGroup";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 
-// TODO increase font size
-
 interface Props {
   onSpeedChange?: (speed: number) => void;
   onFastForwardToggle?: (fastForward: boolean, speed: number | undefined) => void;
   onSnakeSelect?: (value: number) => void;
+  onWallsToggle?: (walls: boolean) => void;
 }
 
 interface State {
@@ -21,7 +20,7 @@ interface State {
 export default class Controls extends Component<Props, State> {
   static defaults = {
     speed: 10,
-    snakes: 20,
+    snakes: 10,
   };
   speed: number;
 
@@ -45,6 +44,11 @@ export default class Controls extends Component<Props, State> {
 
   handleSnakeSelect = (event: React.ChangeEvent<{ name?: string | undefined; value: unknown }>) => {
     this.props.onSnakeSelect?.(event.target.value as number);
+  };
+
+  toggleWalls = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const walls = event.target.checked;
+    this.props.onWallsToggle?.(walls);
   };
 
   render() {
@@ -83,11 +87,22 @@ export default class Controls extends Component<Props, State> {
         <MenuItem value={20}>Top 20</MenuItem>
       </Select>
     );
+    const wallSwitch = (
+      <Switch className="wall-switch" defaultChecked onChange={this.toggleWalls} />
+    );
     return (
       <FormGroup row className="controls">
-        <FormControlLabel label="Fast Forward" control={fastForwardSwitch} labelPlacement="start" />
-        <FormControlLabel label="Speed" control={speedSlider} labelPlacement="start" />
-        <FormControlLabel label="Show" control={snakeVisibilitySelect} labelPlacement="start" />
+        <div className="left">
+          <FormControlLabel label="Fast Forward"
+            control={fastForwardSwitch}
+            labelPlacement="start"
+          />
+          <FormControlLabel label="Speed" control={speedSlider} labelPlacement="start" />
+          <FormControlLabel label="Show" control={snakeVisibilitySelect} labelPlacement="start" />
+        </div>
+        <div className="right">
+          <FormControlLabel label="Obstacles" control={wallSwitch} labelPlacement="end" />
+        </div>
       </FormGroup>
     );
   }

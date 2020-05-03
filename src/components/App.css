@@ -52,6 +52,10 @@
   margin-left: 10px;
 }
 
+.controls .right {
+  margin-left: auto;
+}
+
 .MuiFormControlLabel-root .MuiFormControlLabel-label,
 .MuiFormControlLabel-root .MuiSelect-root,
 .MuiList-root .MuiListItem-root {

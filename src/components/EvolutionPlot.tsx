@@ -29,7 +29,7 @@ export default class EvolutionPlot extends React.Component<Props, State> {
   }
 
   private postGen = () => {
-    const scores = this.evolver.game.snakes.map(snake => snake.fruits);
+    const scores = this.evolver.game.snakes.map((snake) => snake.fruits);
     // const avg = scores.reduce((sum, score) => sum + score, 0) / scores.length;
     const max = Math.max(...scores);
     this.setState({
@@ -52,8 +52,9 @@ export default class EvolutionPlot extends React.Component<Props, State> {
       {
         type: "scatter",
         x: this.state.generations,
-        y: this.state.max
-      }
+        y: this.state.max,
+        line: { shape: "spline", smoothing: 1.5 },
+      },
     ];
     const layout: Partial<Layout> = {
       xaxis: { title: "Generation", fixedrange: true, rangemode: "nonnegative" },
@@ -63,11 +64,11 @@ export default class EvolutionPlot extends React.Component<Props, State> {
         r: 20,
         b: 40,
         t: 20,
-        pad: 4
-      }
+        pad: 4,
+      },
     };
     const config: Partial<Config> = {
-      displayModeBar: false
+      displayModeBar: false,
     };
 
     return <Plot className="evolution-plot" data={data} layout={layout} config={config} />;

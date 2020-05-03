@@ -9,6 +9,10 @@ export function positionDiff(origin: Position, dest: Position): Vector {
   return dest.map((value, axis) => value - origin[axis]) as Vector;
 }
 
+export function movePosition(origin: Position, vector: Vector): Position {
+  return origin.map((value, axis) => value + vector[axis]) as Position;
+}
+
 // Counter clockwise angle created by the input vector relative to [1, 0], in radians ([-pi, pi]). E.g:
 // vectorAngle([0, 1]) = pi/2
 // vectorAngle([0, -1]) = -pi/2

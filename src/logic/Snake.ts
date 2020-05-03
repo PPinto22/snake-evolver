@@ -1,6 +1,7 @@
-import { Direction, Position, positionToStr, PositionStr } from "./util/types";
+import { Direction, Position, positionToStr, PositionStr, Turn } from "./util/types";
 import Board from "./Board";
 import Brain from "./Brain";
+import { directions } from "./util/geometry";
 
 export default class Snake {
   // Details
@@ -36,9 +37,20 @@ export default class Snake {
     this.brain = new brainConstructor(this, network, board);
   }
 
-  think(): this {
-    this.brain?.activate();
-    return this;
+  think(): Turn {
+    const turn = this.brain?.activate();
+    switch (turn) {
+      case "left":
+        this.direction = directions.leftOf(this.direction);
+        break;
+      case "right":
+        this.direction = directions.rightOf(this.direction);
+        break;
+      case "forward":
+      default:
+        // do nothing
+    }
+    return turn || "forward";
   }
 
   getHead(): Position {

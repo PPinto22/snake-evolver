@@ -26,7 +26,7 @@ export default class App extends React.Component<{}, State> {
     this.game = new Game({
       rows: 20,
       columns: 40,
-      snakes: 50,
+      snakes: 75,
       visibleSnakes: Controls.defaults.snakes,
       speed: Controls.defaults.speed,
       snakeLength: 4,
@@ -54,13 +54,18 @@ export default class App extends React.Component<{}, State> {
     this.setState({ snakes: snakes });
   };
 
+  wallsHandler = (walls: boolean) => {
+    if (walls) this.game.addRandomWalls();
+    else this.game.removeWalls();
+  };
+
   render() {
     return (
       <div id="app">
         <h1>Snake Evolver</h1>
         <div id="main">
           <div id="stats">
-            <StatCards evolver={this.evolver}/>
+            <StatCards evolver={this.evolver} />
             <EvolutionPlot evolver={this.evolver} />
           </div>
           <div id="game-container">
@@ -68,6 +73,7 @@ export default class App extends React.Component<{}, State> {
               onSpeedChange={this.speedChangeHandler}
               onFastForwardToggle={this.fastForwardHandler}
               onSnakeSelect={this.snakeSelectHandler}
+              onWallsToggle={this.wallsHandler}
             />
             <GameCanvas width={1000} height={500} game={this.game} snakes={this.state.snakes} />
           </div>

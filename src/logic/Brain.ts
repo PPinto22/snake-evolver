@@ -1,6 +1,6 @@
 import Snake from "./Snake";
 import Board from "./Board";
-import { Vector, Position } from "./util/types";
+import { Vector, Position, Turn } from "./util/types";
 import { max } from "./util/misc";
 import {
   manhattanDistance,
@@ -35,23 +35,21 @@ export default abstract class Brain {
   // Calculates the inputs to feed into the neural network:
   abstract getInputs(): number[];
 
-  // Activates the neural network and changes the snake's direction
+  // Activates the neural network and returns the change in direction
   // Possibilities: turn left, turn right, continue forward
-  activate(): void {
+  activate(): Turn {
     this.network.clear();
     const inputs = this.getInputs();
     const outputs: [number, number, number] = this.network.activate(inputs);
     const [index] = max(outputs)!;
     switch (index) {
-      case 0:
-        // Keep going forward
-        break;
       case 1:
-        this.snake.direction = directions.leftOf(this.snake.direction);
-        break;
+        return "left";
       case 2:
-        this.snake.direction = directions.rightOf(this.snake.direction);
-        break;
+        return "right";
+      case 0:
+      default:
+        return "forward";
     }
   }
 
@@ -125,27 +123,34 @@ export class CloseObstaclesAndFruitVectorBrain extends Brain {
     this.maxDistance = Math.max(this.board.columns, this.board.rows);
   }
 
-  // Close obstacle -> ~1
-  // Distant obstacle -> ~0
-  inverseDistanceToObstacle(direction: Vector): number {
-    const dist = this.distanceToObstacle(direction);
-    return 1 / (dist ** 2);
-  }
-
-  // 1. obstacle forward?
-  // 2. obstacle to the left?
-  // 3. obstacle to the right?
-  // 4. distance to fruit forward (+) or backward (-)
-  // 5. distance to fruit to the left (+) or right (-)
+  // 1. proximity of obstacle forward
+  // 2. proximity of obstacle to the left
+  // 3. proximity of obstacle to the right
+  // 4. proximity of fruit forward (+) or backward (-)
+  // 5. proximity of fruit to the left (+) or right (-)
   getInputs(): number[] {
     const fruitPosition: Position = this.relativeFruitPosition() || [NaN, NaN];
     return [
       this.inverseDistanceToObstacle(Board.getVector(this.snake.direction)),
       this.inverseDistanceToObstacle(Board.getVector(directions.leftOf(this.snake.direction))),
       this.inverseDistanceToObstacle(Board.getVector(directions.rightOf(this.snake.direction))),
-      fruitPosition[0] / this.maxDistance,
-      fruitPosition[1] / this.maxDistance,
+      this.signedProximity(fruitPosition[0]),
+      this.signedProximity(fruitPosition[1]),
     ];
+  }
+
+  // Close obstacle -> ~1
+  // Distant obstacle -> ~0
+  private inverseDistanceToObstacle(direction: Vector): number {
+    const dist = this.distanceToObstacle(direction);
+    return 1 / dist ** 2;
+  }
+
+  // Step 1. Normalize distance to range [-1, 1], where -1/1 means max distance in either direction and ~0 means close
+  // Step 2. Invert "distance" to "proximity", where -1/1 means very close in either direction and ~0 means max distance
+  private signedProximity(absoluteDistance: number) {
+    const normDist = absoluteDistance / this.maxDistance;
+    return normDist >= 0 ? 1 - normDist : -1 - normDist;
   }
 }
 

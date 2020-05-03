@@ -52,9 +52,9 @@ export default class Evolver {
   defaultParams(): Parameters {
     return {
       popsize: this.game.props.snakes,
-      elitism: Math.round(0.15 * this.game.props.snakes),
-      mutationRate: 0.5,
-      mutationAmount: 2,
+      elitism: Math.round(0.2 * this.game.props.snakes),
+      mutationRate: 0.4,
+      mutationAmount: 3,
       fitnessPopulation: true,
       // network: this.createNetwork()
     };

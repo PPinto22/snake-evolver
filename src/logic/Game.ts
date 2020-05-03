@@ -14,6 +14,8 @@ export interface GameProps {
   snakes: number;
   visibleSnakes: number;
   snakeLength: number;
+  spawnMargin: number;
+  wallDensity: number;
   speed: number;
   scoreService: ScoreService;
   brainType: new (...args: any[]) => Brain;
@@ -42,6 +44,8 @@ export default class Game {
     snakes: 20,
     visibleSnakes: 20,
     snakeLength: 4,
+    spawnMargin: 1,
+    wallDensity: 0.07,
     speed: 10,
     scoreService: new DefaultScoreService(),
     brainType: DefaultBrain,
@@ -55,6 +59,7 @@ export default class Game {
     };
 
     this.board = new Board(this.props.rows, this.props.columns);
+    this.addRandomWalls(); // randomly adds obstacles to the board
     this.initSnakes(); // initializes this.snakes, this.aliveSnakes and this.visibleSnakes
 
     this.iteration = 0;
@@ -62,6 +67,22 @@ export default class Game {
 
     this.setSpeed(this.props.speed, false);
     this.sleepTime = this.props.speed ? 1000 / this.props.speed : 0;
+  }
+
+  addRandomWalls() {
+    for (let row = 0; row < this.props.rows; row++) {
+      if (row === 1 || row === this.props.rows - this.props.spawnMargin - 1) continue;
+      for (let col = 0; col < this.props.columns; col++) {
+        if (col === 1 || col === this.props.columns - this.props.spawnMargin - 1) continue;
+        if (!this.board.get([row, col])!.isEmpty()) continue;
+
+        if (Math.random() < this.props.wallDensity) this.board.addWall([row, col]);
+      }
+    }
+  }
+
+  removeWalls() {
+    this.board.removeWalls();
   }
 
   setVisibleSnakes(visibleSnakes: number) {
@@ -132,7 +153,9 @@ export default class Game {
   reset() {
     this.state = "stopped";
     this.iteration = 0;
+    const hadWalls = this.board.walls.size > 0;
     this.board.clearObjects();
+    if (hadWalls) this.addRandomWalls();
     this.initSnakes();
   }
 
@@ -150,13 +173,16 @@ export default class Game {
     }
   }
 
-  // Create a snake placed along the perimeter of the board (with an optional margin)
-  private createSnake(index: number, id: number, margin = 2): Snake {
-    const [width, height] = [this.props.columns - 2 * margin, this.props.rows - 2 * margin];
+  // Create a snake placed along the perimeter of the board (with an optional margin: this.props.spawnMargin)
+  private createSnake(index: number, id: number): Snake {
+    const [width, height] = [
+      this.props.columns - 2 * this.props.spawnMargin,
+      this.props.rows - 2 * this.props.spawnMargin,
+    ];
     const perimeter = width * 2 + height * 2 - 4;
     const vertices = [0, width - 1, width + height - 2, width + height + width - 3, perimeter];
 
-    function distanceToPosition(distance: number): [Position, Direction] {
+    const distanceToPosition = (distance: number): [Position, Direction] => {
       distance = distance % perimeter;
       const side = vertices.findIndex((vertex, i) => {
         const nextVertex = vertices[i + 1];
@@ -184,8 +210,11 @@ export default class Game {
         default:
           throw new Error("Invalid distance.");
       }
-      return [[position[0] + margin, position[1] + margin], direction];
-    }
+      return [
+        [position[0] + this.props.spawnMargin, position[1] + this.props.spawnMargin],
+        direction,
+      ];
+    };
 
     const startDistance = Math.floor((index * perimeter) / this.props.visibleSnakes);
     let direction: Direction = "right";
@@ -199,43 +228,48 @@ export default class Game {
     return new Snake(id, positions, direction);
   }
 
-  private shouldKillSnake(snake: Snake, move: Move) {
+  private shouldKillSnake(snake: Snake, position: Position) {
     return (
-      this.board.outOfBounds(move.position) || // Position out of bounds of the board
-      this.board.get(move.position)!.hasObstacle(snake) || // Position is an obstacle
-      snake.getHistoryCount(move.position) > 2 // Snake has been in the same position more than two times
+      this.board.outOfBounds(position) || // Position out of bounds of the board
+      this.board.get(position)!.hasObstacle(snake) || // Position is an obstacle
+      snake.getHistoryCount(position) > 2 // Snake has been in the same position more than two times
     );
+  }
+
+  private getMove(snake: Snake): Move {
+    const from = snake.getHead();
+    const turn = snake.think();
+    const to = snake.getNextPosition();
+    const fruit = !!this.board.get(to)?.fruits.has(snake);
+    const died = this.shouldKillSnake(snake, to);
+    return { from, to, turn, fruit, died } as Move;
   }
 
   moveSnake = (snake: Snake) => {
     if (!snake.alive) return; // Snake is already dead (should never happen)
-    // Activate the neural network and get the next position
-    const position = snake.think().getNextPosition();
-    const ateFruit = !!this.board.get(position)?.fruits.has(snake);
-    const move = { position, ateFruit };
-    // Snake kill conditions
-    if (this.shouldKillSnake(snake, move)) {
-      this.killSnake(snake);
-      return;
-    }
 
-    if (ateFruit) {
+    const move = this.getMove(snake);
+    // Update snake score
+    snake.score += this.props.scoreService.getMoveScore(this.board, snake, move);
+
+    if (move.died) {
+      // Snake died
+      this.killSnake(snake);
+    } else if (move.fruit) {
       // Snake ate a fruit
-      snake.extendTo(position); // Move and grow the snake
+      snake.extendTo(move.to); // Move and grow the snake
       const newFruit = this.board.addFruit(snake); // Generate a new fruit
       snake.eatFruit(newFruit); // Update counters and set the new fruit
       // Update the board
-      this.board.addSnakePosition(snake, position);
-      this.board.deleteFruit(snake, position);
+      this.board.addSnakePosition(snake, move.to);
+      this.board.deleteFruit(snake, move.to);
     } else {
-      // No fruit
-      const oldTail = snake.moveTo(position); // Move the snake
+      // Regular move (no fruit)
+      const oldTail = snake.moveTo(move.to); // Move the snake
       // Update the board
-      this.board.addSnakePosition(snake, position);
+      this.board.addSnakePosition(snake, move.to);
       this.board.removeSnakePosition(snake, oldTail);
     }
-    // Update snake score
-    snake.score += this.props.scoreService.getMoveScore(this.board, snake, { position, ateFruit });
   };
 
   private killSnake(snake: Snake) {

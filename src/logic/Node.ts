@@ -18,8 +18,13 @@ export default class Node {
     return this.isWall || this.snakes.has(snake);
   }
 
+  isEmpty(): boolean {
+    return !this.isWall && this.snakes.size === 0 && this.fruits.size === 0;
+  }
+
   clearObjects() {
     this.snakes.clear();
     this.fruits.clear();
+    this.isWall = false;
   }
 }
