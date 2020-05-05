@@ -2,6 +2,7 @@ import { Direction, Position, positionToStr, PositionStr, Turn } from "./util/ty
 import Board from "./Board";
 import Brain from "./Brain";
 import { directions } from "./util/geometry";
+import { generateColor } from "./util/misc";
 
 export default class Snake {
   // Details
@@ -23,7 +24,7 @@ export default class Snake {
 
   constructor(id: number, positions: Position[], direction: Direction, fruit?: Position) {
     this.id = id;
-    this.color = this.generateColor();
+    this.color = generateColor();
     this.positions = positions;
     this.direction = direction;
     this.fruit = fruit;
@@ -95,19 +96,5 @@ export default class Snake {
     this.fruit = newFruit;
     this.fruits += 1;
     this.history.clear();
-  }
-
-  generateColor(): string {
-    // "random" number generator based on a seed
-    // https://stackoverflow.com/a/19303725
-    const random = (seed: number) => {
-      var x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
-    };
-
-    // generates a "random" color for this object (e.g., #56eec7)
-    // https://dev.to/akhil_001/generating-random-color-with-single-line-of-js-code-fhj
-    const randomColor = "#" + Math.floor(random(this.id + 3) * 16777215).toString(16);
-    return randomColor;
   }
 }
