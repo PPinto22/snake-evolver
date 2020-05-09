@@ -1,12 +1,13 @@
 import React from "react";
 import GameCanvas from "./GameCanvas";
+import EvolutionPlot from "./EvolutionPlot";
+import Help from "./Help"
 import Game from "../logic/Game";
 import Evolver from "../logic/Evolver";
-import { AlignedDirectionScoreService } from "../logic/ScoreService";
-import EvolutionPlot from "./EvolutionPlot";
 import StatCards from "./StatCards";
 import Controls from "./Controls";
 import { CloseObstaclesAndFruitVectorBrain } from "../logic/Brain";
+import { AlignedDirectionScoreService } from "../logic/ScoreService";
 
 import "./App.css";
 
@@ -62,21 +63,19 @@ export default class App extends React.Component<{}, State> {
   render() {
     return (
       <div id="app">
-        <h1>Snake Evolver</h1>
-        <div id="main">
-          <div id="stats">
-            <StatCards evolver={this.evolver} />
-            <EvolutionPlot evolver={this.evolver} />
-          </div>
-          <div id="game-container">
-            <Controls
-              onSpeedChange={this.speedChangeHandler}
-              onFastForwardToggle={this.fastForwardHandler}
-              onSnakeSelect={this.snakeSelectHandler}
-              onWallsToggle={this.wallsHandler}
-            />
-            <GameCanvas width={1000} height={500} game={this.game} snakes={this.state.snakes} />
-          </div>
+        <Help/>
+        <div id="stats">
+          <StatCards evolver={this.evolver} />
+          <EvolutionPlot evolver={this.evolver} />
+        </div>
+        <div id="game-container">
+          <Controls
+            onSpeedChange={this.speedChangeHandler}
+            onFastForwardToggle={this.fastForwardHandler}
+            onSnakeSelect={this.snakeSelectHandler}
+            onWallsToggle={this.wallsHandler}
+          />
+          <GameCanvas width={1000} height={500} game={this.game} snakes={this.state.snakes} />
         </div>
       </div>
     );

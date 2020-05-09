@@ -48,8 +48,8 @@ export default class StatCards extends React.Component<Props, State> {
   render() {
     return (
       <div className="stat-cards">
-        <StatCard title={"Generation"} content={this.state.generation}></StatCard>
         <StatCard title={"High Score"} content={this.state.highScore}></StatCard>
+        <StatCard title={"Generation"} content={this.state.generation}></StatCard>
       </div>
     );
   }

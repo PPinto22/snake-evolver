@@ -1,12 +1,19 @@
 #app {
   text-align: center;
-}
-
-#main {
   width: 1080px;
   padding: 0 35px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.help {
+  text-align: center;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.help-icon {
+  font-size: 40px;
 }
 
 #stats {
@@ -58,6 +65,7 @@
 
 .MuiFormControlLabel-root .MuiFormControlLabel-label,
 .MuiFormControlLabel-root .MuiSelect-root,
-.MuiList-root .MuiListItem-root {
+.MuiList-root .MuiListItem-root,
+.MuiTooltip-popper .MuiTooltip-tooltip {
   font-size: 1.4rem;
 }
