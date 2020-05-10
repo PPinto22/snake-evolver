@@ -69,6 +69,14 @@ export default class Game {
     this.sleepTime = this.props.speed ? 1000 / this.props.speed : 0;
   }
 
+  pause() {
+    this.state = "stopped";
+  }
+
+  continue() {
+    this.state = "running";
+  }
+
   addRandomWalls() {
     for (let row = 0; row < this.props.rows; row++) {
       if (row === 1 || row === this.props.rows - this.props.spawnMargin - 1) continue;

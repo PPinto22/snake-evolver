@@ -6,10 +6,13 @@
   margin-right: auto;
 }
 
-.help {
-  text-align: center;
-  padding-top: 5px;
-  padding-bottom: 5px;
+.help-modal {
+  max-width: 800px;
+}
+
+.help-modal-body {
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 .help-icon {
@@ -55,7 +58,6 @@
 }
 
 .controls .snake-select {
-  width: 70px;
   margin-left: 10px;
 }
 
@@ -63,9 +65,14 @@
   margin-left: auto;
 }
 
-.MuiFormControlLabel-root .MuiFormControlLabel-label,
-.MuiFormControlLabel-root .MuiSelect-root,
-.MuiList-root .MuiListItem-root,
-.MuiTooltip-popper .MuiTooltip-tooltip {
-  font-size: 1.4rem;
+button:focus {
+  outline: none;
+}
+
+.bold { 
+  font-weight: bold;
+}
+
+.red {
+  color: red;
 }

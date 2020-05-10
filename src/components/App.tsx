@@ -63,7 +63,7 @@ export default class App extends React.Component<{}, State> {
   render() {
     return (
       <div id="app">
-        <Help/>
+        <Help game={this.game}/>
         <div id="stats">
           <StatCards evolver={this.evolver} />
           <EvolutionPlot evolver={this.evolver} />

@@ -15,13 +15,12 @@ export default class StatCard extends React.Component<Props> {
           <Typography
             className="stat-card-title"
             color="textSecondary"
-            variant="h5"
-            component="h2"
+            variant="button"
             gutterBottom
           >
             {this.props.title}
           </Typography>
-          <Typography variant="h4" component="h2">
+          <Typography variant="h5">
             {this.props.content}
           </Typography>
         </CardContent>
