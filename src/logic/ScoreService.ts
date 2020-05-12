@@ -34,4 +34,11 @@ export class AlignedDirectionScoreService implements ScoreService {
   }
 }
 
-export const DefaultScoreService = AlignedDirectionScoreService;
+// Simply return 1 point per fruit
+export class FruitsScoreService implements ScoreService {
+  getMoveScore(board: Board, snake: Snake, move: Move): number {
+    return move.fruit ? 1 : 0;
+  }
+}
+
+export const DefaultScoreService = FruitsScoreService;

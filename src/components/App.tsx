@@ -7,7 +7,7 @@ import Evolver from "../logic/Evolver";
 import StatCards from "./StatCards";
 import Controls from "./Controls";
 import { CloseObstaclesAndFruitVectorBrain } from "../logic/Brain";
-import { AlignedDirectionScoreService } from "../logic/ScoreService";
+import { FruitsScoreService } from "../logic/ScoreService";
 
 import "./App.css";
 
@@ -31,7 +31,7 @@ export default class App extends React.Component<{}, State> {
       visibleSnakes: Controls.defaults.snakes,
       speed: Controls.defaults.speed,
       snakeLength: 4,
-      scoreService: new AlignedDirectionScoreService(),
+      scoreService: new FruitsScoreService(),
       brainType: CloseObstaclesAndFruitVectorBrain,
     });
     this.evolver = new Evolver(this.game);
