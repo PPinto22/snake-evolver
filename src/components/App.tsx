@@ -27,7 +27,7 @@ export default class App extends React.Component<{}, State> {
     this.game = new Game({
       rows: 20,
       columns: 40,
-      snakes: 75,
+      snakes: 100,
       visibleSnakes: Controls.defaults.snakes,
       speed: Controls.defaults.speed,
       snakeLength: 4,

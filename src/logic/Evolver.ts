@@ -53,8 +53,8 @@ export default class Evolver {
     return {
       popsize: this.game.props.snakes,
       elitism: Math.round(0.2 * this.game.props.snakes),
-      mutationRate: 0.4,
-      mutationAmount: 3,
+      mutationRate: 0.3,
+      mutationAmount: 1,
       fitnessPopulation: true,
       // network: this.createNetwork()
     };
@@ -83,6 +83,19 @@ export default class Evolver {
     this.game.setBrains(this.neat.population);
   }
 
+  // Neataptic puts elites at the end; 
+  // this is a hack to put them at the top of the list
+  sortPopulation() {
+    let population: any[] = []
+    for(let i = this.params.popsize - this.params.elitism; i < this.params.popsize; i++) {
+      population.push(this.neat.population[i]);
+    }
+    for(let i = 0; i < this.params.popsize - this.params.elitism; i++) {
+      population.push(this.neat.population[i]);
+    }
+    this.neat.population = population;
+  }
+
   async evaluatePopulation(population: any[]) {
     this.game.setBrains(this.neat.population); // Associate each neural network with the respective snake
     await this.game.run();
@@ -97,6 +110,7 @@ export default class Evolver {
       this.generation += 1;
       this.callbacks.preGen.forEach(f => f());
       await this.neat.evolve();
+      this.sortPopulation();
       this.callbacks.postGen.forEach(f => f());
       this.game.reset();
     }
