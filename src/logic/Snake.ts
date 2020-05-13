@@ -24,7 +24,7 @@ export default class Snake {
 
   constructor(id: number, positions: Position[], direction: Direction, fruit?: Position) {
     this.id = id;
-    this.color = generateColor();
+    this.color = generateColor(`seed ${this.id}`);
     this.positions = positions;
     this.direction = direction;
     this.fruit = fruit;

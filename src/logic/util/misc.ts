@@ -1,3 +1,5 @@
+import seedrandom from "seedrandom";
+
 export function choice<T>(s: Array<T>): T | undefined {
   if (s.length === 0) return;
 
@@ -45,9 +47,10 @@ export function time<T>(f: () => T): [T, number] {
 }
 
 // Source: https://www.sitepoint.com/javascript-generate-lighter-darker-color/
-export function generateColor() {
+export function generateColor(seed?: string) {
+  const rng = seedrandom(seed?.toString());
   var lum = -0.20;
-  var hex = String('#' + Math.random().toString(16).slice(2, 8).toUpperCase()).replace(/[^0-9a-f]/gi, '');
+  var hex = String('#' + rng().toString(16).slice(2, 8).toUpperCase()).replace(/[^0-9a-f]/gi, '');
   if (hex.length < 6) {
       hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
   }
