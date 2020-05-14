@@ -1,8 +1,6 @@
 # Snake Evolver
 
-Learning to play Snake with neuroevolution. [DEMO](http://localhost:3000)
-
-TODO: Update link
+Learning to play Snake with neuroevolution. [DEMO](https://ppinto22.github.io/snake-evolver/)
 
 ## Inputs and Outputs
 

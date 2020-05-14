@@ -8,7 +8,7 @@ import App from "./components/App";
 import NotFound from "./components/NotFound";
 
 ReactDOM.render(
-  <BrowserRouter>
+  <BrowserRouter basename={process.env.REACT_APP_BASE_PATH}>
     <Switch>
       <Route path="/" exact component={App} />
       <Route component={NotFound} />

@@ -1,6 +1,7 @@
 {
   "name": "snake-evolver",
   "version": "0.1.0",
+  "homepage": "https://ppinto22.github.io/snake-evolver/",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.9.2",
@@ -28,6 +29,8 @@
     "typescript": "^3.7.4"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -52,6 +55,7 @@
     "@typescript-eslint/eslint-plugin": "^2.13.0",
     "@typescript-eslint/parser": "^2.13.0",
     "eslint": "^6.8.0",
-    "eslint-plugin-react": "^7.17.0"
+    "eslint-plugin-react": "^7.17.0",
+    "gh-pages": "^2.2.0"
   }
 }
