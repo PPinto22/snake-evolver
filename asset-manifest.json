@@ -1,22 +1,22 @@
 {
   "files": {
     "main.css": "/snake-evolver/static/css/main.b2e88c8e.chunk.css",
-    "main.js": "/snake-evolver/static/js/main.60e1b2d5.chunk.js",
-    "main.js.map": "/snake-evolver/static/js/main.60e1b2d5.chunk.js.map",
+    "main.js": "/snake-evolver/static/js/main.473ac9b6.chunk.js",
+    "main.js.map": "/snake-evolver/static/js/main.473ac9b6.chunk.js.map",
     "runtime-main.js": "/snake-evolver/static/js/runtime-main.ad058f73.js",
     "runtime-main.js.map": "/snake-evolver/static/js/runtime-main.ad058f73.js.map",
-    "static/js/2.466417c0.chunk.js": "/snake-evolver/static/js/2.466417c0.chunk.js",
-    "static/js/2.466417c0.chunk.js.map": "/snake-evolver/static/js/2.466417c0.chunk.js.map",
+    "static/js/2.b40914c4.chunk.js": "/snake-evolver/static/js/2.b40914c4.chunk.js",
+    "static/js/2.b40914c4.chunk.js.map": "/snake-evolver/static/js/2.b40914c4.chunk.js.map",
     "index.html": "/snake-evolver/index.html",
-    "precache-manifest.436e66d5634e06c2c4cbfc26e71a05bc.js": "/snake-evolver/precache-manifest.436e66d5634e06c2c4cbfc26e71a05bc.js",
+    "precache-manifest.ff52b93af7079ee65aca1572fb36b754.js": "/snake-evolver/precache-manifest.ff52b93af7079ee65aca1572fb36b754.js",
     "service-worker.js": "/snake-evolver/service-worker.js",
     "static/css/main.b2e88c8e.chunk.css.map": "/snake-evolver/static/css/main.b2e88c8e.chunk.css.map",
-    "static/js/2.466417c0.chunk.js.LICENSE.txt": "/snake-evolver/static/js/2.466417c0.chunk.js.LICENSE.txt"
+    "static/js/2.b40914c4.chunk.js.LICENSE.txt": "/snake-evolver/static/js/2.b40914c4.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.ad058f73.js",
-    "static/js/2.466417c0.chunk.js",
+    "static/js/2.b40914c4.chunk.js",
     "static/css/main.b2e88c8e.chunk.css",
-    "static/js/main.60e1b2d5.chunk.js"
+    "static/js/main.473ac9b6.chunk.js"
   ]
 }
